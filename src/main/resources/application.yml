@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: bulletin-board
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/board
+    username: postgres
+    password: postgres
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    enabled: true
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8081/realms/board-realm
+
+server:
+  port: 8080
