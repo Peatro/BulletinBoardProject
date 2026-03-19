@@ -7,6 +7,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum NotFoundExceptionMessage {
     CATEGORY_NOT_FOUND("Category not found."),
-    USER_NOT_FOUND("User not found.");
+    USER_NOT_FOUND("User not found."),
+    ADVERTISEMENT_NOT_FOUND("Advertisement not found.");
     private final String message;
 }

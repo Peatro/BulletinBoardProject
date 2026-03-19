@@ -8,5 +8,5 @@ public interface UserFacade {
 
     User getById(UUID id);
 
-    boolean existsById(UUID id);
+    User getByKeycloakId(UUID keycloakUserId);
 }

@@ -16,12 +16,11 @@ public class UserFacadeImpl implements UserFacade {
 
     @Override
     public User getById(UUID userId) {
-        return userService.findUserById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        return userService.getUser(userId);
     }
 
     @Override
-    public boolean existsById(UUID id) {
-        return userService.findUserById(id).isPresent();
+    public User getByKeycloakId(UUID keycloakUserId) {
+        return userService.findByKeycloakUserIdOrThrow(keycloakUserId);
     }
 }

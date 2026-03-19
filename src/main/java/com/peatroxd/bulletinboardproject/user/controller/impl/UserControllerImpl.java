@@ -1,8 +1,9 @@
 package com.peatroxd.bulletinboardproject.user.controller.impl;
 
 import com.peatroxd.bulletinboardproject.user.controller.UserController;
-import com.peatroxd.bulletinboardproject.user.entity.User;
 import com.peatroxd.bulletinboardproject.security.Role;
+import com.peatroxd.bulletinboardproject.user.dto.request.UserCreateRequest;
+import com.peatroxd.bulletinboardproject.user.entity.User;
 import com.peatroxd.bulletinboardproject.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,43 +16,35 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
 public class UserControllerImpl implements UserController {
 
-    private final UserService service;
-
-    @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public List<User> list() {
-        return service.list();
-    }
+    private final UserService userService;
 
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public User get(@PathVariable UUID id) {
-        return service.get(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    public User getUserById(@PathVariable UUID id) {
+        return userService.getUser(id);
     }
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public User create(@RequestBody User user, @RequestParam Role role) {
-        return service.create(user, role);
+    public User createUser(@RequestBody UserCreateRequest request, @RequestParam Role role) {
+        return userService.createUser(request, role);
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public User update(@PathVariable UUID id, @RequestBody User user, @RequestParam Role role) {
-        return service.update(id, user, role);
+    public User updateUser(@PathVariable UUID id, @RequestBody User user, @RequestParam Role role) {
+        return userService.updateUser(id, user, role);
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public void delete(@PathVariable UUID id) {
-        service.delete(id);
+    public void deleteUser(@PathVariable UUID id) {
+        userService.deleteUser(id);
     }
 }
