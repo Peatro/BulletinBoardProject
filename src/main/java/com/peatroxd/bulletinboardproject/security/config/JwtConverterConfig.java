@@ -1,4 +1,4 @@
-package com.peatroxd.bulletinboardproject.config;
+package com.peatroxd.bulletinboardproject.security.config;
 
 import com.peatroxd.bulletinboardproject.security.KeycloakRoleConverter;
 import org.springframework.context.annotation.Bean;

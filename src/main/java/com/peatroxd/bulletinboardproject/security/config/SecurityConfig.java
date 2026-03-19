@@ -1,4 +1,4 @@
-package com.peatroxd.bulletinboardproject.config;
+package com.peatroxd.bulletinboardproject.security.config;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
