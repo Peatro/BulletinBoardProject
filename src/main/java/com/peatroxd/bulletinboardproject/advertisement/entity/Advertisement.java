@@ -44,13 +44,15 @@ public class Advertisement {
 
     private String title;
 
-    private BigDecimal price;
-
     private String description;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @ToString.Exclude
-    private Currency currency;
+    private BigDecimal price;
+
+    @Enumerated(EnumType.STRING)
+    private AdvertisementStatus status;
+
+    @Enumerated(EnumType.STRING)
+    private AdvertisementType type;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id", nullable = false, columnDefinition = "uuid")
@@ -61,20 +63,9 @@ public class Advertisement {
     @ToString.Exclude
     private Category category;
 
-    @Enumerated(EnumType.STRING)
-    private AdvertisementSubCategory subCategory;
-
-    @Enumerated(EnumType.STRING)
-    private AdvertisementStatus status;
-
-    @Enumerated(EnumType.STRING)
-    private AdvertisementType type;
-
     private LocalDateTime createdAt;
-    private LocalDateTime publishedAt;
     private LocalDateTime updatedAt;
-
-    private boolean published;
+    private LocalDateTime publishedAt;
 
     @Override
     public final boolean equals(Object o) {
