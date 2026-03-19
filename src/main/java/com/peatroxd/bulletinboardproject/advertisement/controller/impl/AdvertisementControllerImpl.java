@@ -6,11 +6,11 @@ import com.peatroxd.bulletinboardproject.advertisement.dto.response.Advertisemen
 import com.peatroxd.bulletinboardproject.advertisement.entity.Advertisement;
 import com.peatroxd.bulletinboardproject.advertisement.mapper.AdvertisementMapper;
 import com.peatroxd.bulletinboardproject.advertisement.service.AdvertisementService;
+import com.peatroxd.bulletinboardproject.security.annotation.CurrentUser;
 import com.peatroxd.bulletinboardproject.security.service.CurrentUserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -31,7 +31,6 @@ import java.util.UUID;
 public class AdvertisementControllerImpl implements AdvertisementController {
 
     private final AdvertisementService advertisementService;
-    private final CurrentUserService currentUserService;
     private final AdvertisementMapper mapper;
 
     @GetMapping
@@ -44,11 +43,8 @@ public class AdvertisementControllerImpl implements AdvertisementController {
     @PostMapping
     public AdvertisementResponse create(
             @Valid @RequestBody CreateAdvertisementRequest request,
-            JwtAuthenticationToken token
+            @CurrentUser UUID userId
     ) {
-
-        UUID userId = UUID.fromString(token.getToken().getSubject());
-
         Advertisement advertisement = advertisementService.create(request, userId);
 
         return mapper.toAdvertisementResponse(advertisement);
@@ -56,21 +52,28 @@ public class AdvertisementControllerImpl implements AdvertisementController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or #advertisement.author == authentication.name")
-    public Advertisement update(@PathVariable Long id, @RequestBody Advertisement advertisement) {
+    public Advertisement update(
+            @PathVariable Long id,
+            @RequestBody Advertisement advertisement
+    ) {
         advertisement.setId(id);
         return advertisementService.update(advertisement);
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or #author == authentication.name")
-    public void delete(@PathVariable Long id, @RequestParam String author) {
+    public void delete(
+            @PathVariable Long id,
+            @RequestParam String author
+    ) {
         advertisementService.delete(id);
     }
 
     @PatchMapping("/{id}/publish")
-    public AdvertisementResponse publish(@PathVariable Long id) {
-
-        UUID userId = currentUserService.getUserId();
+    public AdvertisementResponse publish(
+            @PathVariable Long id,
+            @CurrentUser UUID userId
+    ) {
         Advertisement advertisement = advertisementService.publish(id, userId);
 
         return mapper.toAdvertisementResponse(advertisement);
