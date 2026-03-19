@@ -16,12 +16,6 @@ public class UserFacadeImpl implements UserFacade {
 
     @Override
     public User getById(UUID userId) {
-        return userService.findUserById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-    }
-
-    @Override
-    public boolean existsById(UUID id) {
-        return userService.findUserById(id).isPresent();
+        return userService.findUserByIdOrThrow(userId);
     }
 }
