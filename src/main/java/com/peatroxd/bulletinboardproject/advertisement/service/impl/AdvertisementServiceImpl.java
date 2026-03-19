@@ -8,6 +8,8 @@ import com.peatroxd.bulletinboardproject.advertisement.repository.AdvertisementR
 import com.peatroxd.bulletinboardproject.advertisement.service.AdvertisementService;
 import com.peatroxd.bulletinboardproject.category.enitty.Category;
 import com.peatroxd.bulletinboardproject.category.facade.CategoryFacade;
+import com.peatroxd.bulletinboardproject.common.enums.NotFoundExceptionMessage;
+import com.peatroxd.bulletinboardproject.common.exception.ResourceNotFoundException;
 import com.peatroxd.bulletinboardproject.user.entity.User;
 import com.peatroxd.bulletinboardproject.user.facade.UserFacade;
 import lombok.RequiredArgsConstructor;
@@ -46,6 +48,26 @@ public class AdvertisementServiceImpl implements AdvertisementService {
         return advertisementRepository.save(advertisement);
     }
 
+    @Override
+    public Advertisement publish(Long id, UUID userId) {
+
+        Advertisement advertisement = findByIdOrThrow(id);
+
+        if (!advertisement.getAuthor().getId().equals(userId)) {
+            throw new RuntimeException("Forbidden");
+        }
+
+        if (advertisement.getStatus() != AdvertisementStatus.DRAFT) {
+            throw new RuntimeException("Only DRAFT can be published");
+        }
+
+        advertisement.setStatus(AdvertisementStatus.PUBLISHED);
+        advertisement.setPublishedAt(LocalDateTime.now());
+        advertisement.setUpdatedAt(LocalDateTime.now());
+
+        return advertisementRepository.save(advertisement);
+    }
+
     public List<Advertisement> list() {
         return advertisementRepository.findAll();
     }
@@ -61,5 +83,10 @@ public class AdvertisementServiceImpl implements AdvertisementService {
 
     public void delete(Long id) {
         advertisementRepository.deleteById(id);
+    }
+
+    private Advertisement findByIdOrThrow(Long id) {
+        return advertisementRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(NotFoundExceptionMessage.ADVERTISEMENT_NOT_FOUND.getMessage()));
     }
 }

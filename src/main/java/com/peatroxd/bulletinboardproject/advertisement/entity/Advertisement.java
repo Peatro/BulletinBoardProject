@@ -48,6 +48,8 @@ public class Advertisement {
 
     private String description;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @ToString.Exclude
     private Currency currency;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -55,6 +57,8 @@ public class Advertisement {
     @ToString.Exclude
     private User author;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @ToString.Exclude
     private Category category;
 
     @Enumerated(EnumType.STRING)
@@ -67,6 +71,7 @@ public class Advertisement {
     private AdvertisementType type;
 
     private LocalDateTime createdAt;
+    private LocalDateTime publishedAt;
     private LocalDateTime updatedAt;
 
     private boolean published;

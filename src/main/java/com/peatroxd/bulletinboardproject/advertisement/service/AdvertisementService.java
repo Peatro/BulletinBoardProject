@@ -18,4 +18,6 @@ public interface AdvertisementService {
     Advertisement update(Advertisement a);
 
     void delete(Long id);
+
+    Advertisement publish(Long id, UUID userId);
 }
