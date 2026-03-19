@@ -3,18 +3,15 @@ package com.peatroxd.bulletinboardproject.user.controller;
 import com.peatroxd.bulletinboardproject.user.entity.User;
 import com.peatroxd.bulletinboardproject.security.Role;
 
-import java.util.List;
 import java.util.UUID;
 
 public interface UserController {
 
-    List<User> list();
+    User getUserById(UUID id);
 
-    User get(UUID id);
+    User createUser(User user, Role role);
 
-    User create(User user, Role role);
+    User updateUser(UUID id, User user, Role role);
 
-    User update(UUID id, User user, Role role);
-
-    void delete(UUID id);
+    void deleteUser(UUID id);
 }

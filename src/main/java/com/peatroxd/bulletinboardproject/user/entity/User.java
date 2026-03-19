@@ -40,11 +40,15 @@ public class User {
     @Column(nullable = false)
     private String email;
 
-    private boolean enabled;
+    private String name;
+
+    private String phone;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
+
+    private boolean enabled;
 
     @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude

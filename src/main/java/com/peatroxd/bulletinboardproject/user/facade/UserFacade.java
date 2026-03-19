@@ -7,6 +7,4 @@ import java.util.UUID;
 public interface UserFacade {
 
     User getById(UUID id);
-
-    boolean existsById(UUID id);
 }

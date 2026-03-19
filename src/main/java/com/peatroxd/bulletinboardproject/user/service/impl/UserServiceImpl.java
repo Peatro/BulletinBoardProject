@@ -19,33 +19,33 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
 
-    public User create(User user, Role role) {
+    public User createUser(User user, Role role) {
         user.setEnabled(true);
         user.setRole(role);
         return userRepository.save(user);
     }
 
-    public List<User> list() {
-        return userRepository.findAll();
+    public User getUser(UUID id) {
+        return findUserByIdOrThrow(id);
     }
 
-    public User findUserByIdOrThrow(UUID id) {
-        return userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(NotFoundExceptionMessage.USER_NOT_FOUND.getMessage()));
-    }
-
-    public User update(UUID id, User user, Role role) {
+    public User updateUser(UUID id, User user, Role role) {
         user.setId(id);
         user.setRole(role);
         return userRepository.save(user);
     }
 
-    public void delete(UUID id) {
+    public void deleteUser(UUID id) {
         userRepository.deleteById(id);
     }
 
     public User findByUsernameOrThrow(String username) {
         return userRepository.findUserByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException(NotFoundExceptionMessage.USER_NOT_FOUND.getMessage()));
+    }
+
+    private User findUserByIdOrThrow(UUID id) {
+        return userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(NotFoundExceptionMessage.USER_NOT_FOUND.getMessage()));
     }
 }
