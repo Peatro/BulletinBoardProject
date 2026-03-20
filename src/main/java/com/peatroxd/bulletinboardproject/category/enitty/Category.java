@@ -1,10 +1,7 @@
 package com.peatroxd.bulletinboardproject.category.enitty;
 
-import com.peatroxd.bulletinboardproject.advertisement.enums.AdvertisementCategory;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
