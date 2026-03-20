@@ -1,29 +1,31 @@
-package com.peatroxd.bulletinboardproject.advertisement.dto.request;
+        package com.peatroxd.bulletinboardproject.advertisement.dto.request;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.Size;
+        import com.peatroxd.bulletinboardproject.advertisement.enums.AdvertisementType;
+        import jakarta.validation.constraints.NotBlank;
+        import jakarta.validation.constraints.NotNull;
+        import jakarta.validation.constraints.Positive;
+        import jakarta.validation.constraints.Size;
 
-import java.math.BigDecimal;
+        import java.math.BigDecimal;
 
-public record AdvertisementCreateRequest(
-        @NotBlank
-        @Size(max = 100)
-        String title,
+        public record AdvertisementCreateRequest(
 
-        @NotBlank
-        @Size(max = 2000)
-        String description,
+                @NotBlank
+                @Size(max = 100)
+                String title,
 
-        @NotNull
-        @Positive
-        BigDecimal price,
+                @NotBlank
+                @Size(max = 2000)
+                String description,
 
-        @NotNull
-        String currency,
+                @NotNull
+                @Positive
+                BigDecimal price,
 
-        @NotNull
-        Long categoryId
-) {
-}
+                @NotNull
+                Long categoryId,
+
+                @NotNull
+                AdvertisementType advertisementType
+        ) {
+        }
