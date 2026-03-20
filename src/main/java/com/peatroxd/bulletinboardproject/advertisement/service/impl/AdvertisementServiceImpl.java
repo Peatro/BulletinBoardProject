@@ -1,6 +1,7 @@
 package com.peatroxd.bulletinboardproject.advertisement.service.impl;
 
 import com.peatroxd.bulletinboardproject.advertisement.dto.request.AdvertisementCreateRequest;
+import com.peatroxd.bulletinboardproject.advertisement.dto.response.AdvertisementResponse;
 import com.peatroxd.bulletinboardproject.advertisement.entity.Advertisement;
 import com.peatroxd.bulletinboardproject.advertisement.enums.AdvertisementStatus;
 import com.peatroxd.bulletinboardproject.advertisement.mapper.AdvertisementMapper;
@@ -14,10 +15,10 @@ import com.peatroxd.bulletinboardproject.user.entity.User;
 import com.peatroxd.bulletinboardproject.user.facade.UserFacade;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -27,66 +28,101 @@ public class AdvertisementServiceImpl implements AdvertisementService {
     private final AdvertisementRepository advertisementRepository;
     private final CategoryFacade categoryFacade;
     private final UserFacade userFacade;
-
-
-    private final AdvertisementMapper mapper;
+    private final AdvertisementMapper advertisementMapper;
 
     @Override
-    public Advertisement create(AdvertisementCreateRequest request, UUID userId) {
-
+    @Transactional
+    public AdvertisementResponse createAdvertisement(AdvertisementCreateRequest request, UUID userId) {
         User author = userFacade.getById(userId);
         Category category = categoryFacade.getById(request.categoryId());
 
-        Advertisement advertisement = mapper.toAdvertisementEntity(request);
+        Advertisement advertisement = advertisementMapper.toEntity(request);
+        setAdvertisementDefaults(advertisement, author, category);
 
-        advertisement.setAuthor(author);
-        advertisement.setCategory(category);
-        advertisement.setStatus(AdvertisementStatus.DRAFT);
-        advertisement.setCreatedAt(LocalDateTime.now());
-        advertisement.setUpdatedAt(LocalDateTime.now());
-
-        return advertisementRepository.save(advertisement);
+        Advertisement savedAdvertisement = advertisementRepository.save(advertisement);
+        return advertisementMapper.toResponse(savedAdvertisement);
     }
 
     @Override
-    public Advertisement publish(Long id, UUID userId) {
+    public List<AdvertisementResponse> getAllAdvertisements() {
+        return advertisementRepository.findAll()
+                .stream()
+                .map(advertisementMapper::toResponse)
+                .toList();
+    }
 
+    @Override
+    public List<AdvertisementResponse> getAllAdvertisementsByUserId(UUID userId) {
+        return advertisementRepository.findAllByAuthor_Id(userId)
+                .stream()
+                .map(advertisementMapper::toResponse)
+                .toList();
+    }
+
+    @Override
+    public AdvertisementResponse getAdvertisementById(Long id) {
+        Advertisement advertisement = findByIdOrThrow(id);
+        return advertisementMapper.toResponse(advertisement);
+    }
+
+    @Override
+    @Transactional
+    public AdvertisementResponse updateAdvertisement(AdvertisementCreateRequest request) {
+        // TODO
+        return null;
+    }
+
+    @Override
+    @Transactional
+    public void deleteAdvertisement(Long id) {
+        Advertisement advertisement = findByIdOrThrow(id);
+        advertisementRepository.delete(advertisement);
+    }
+
+    @Override
+    @Transactional
+    public AdvertisementResponse publishAdvertisement(Long id, UUID userId) {
         Advertisement advertisement = findByIdOrThrow(id);
 
-        if (!advertisement.getAuthor().getId().equals(userId)) {
-            throw new RuntimeException("Forbidden");
-        }
-
-        if (advertisement.getStatus() != AdvertisementStatus.DRAFT) {
-            throw new RuntimeException("Only DRAFT can be published");
-        }
+        validateOwnership(advertisement, userId);
+        validatePublishAllowed(advertisement);
 
         advertisement.setStatus(AdvertisementStatus.PUBLISHED);
         advertisement.setPublishedAt(LocalDateTime.now());
         advertisement.setUpdatedAt(LocalDateTime.now());
 
-        return advertisementRepository.save(advertisement);
-    }
-
-    public List<Advertisement> list() {
-        return advertisementRepository.findAll();
-    }
-
-    public Optional<Advertisement> get(Long id) {
-        return advertisementRepository.findById(id);
-    }
-
-    public Advertisement update(Advertisement a) {
-        a.setUpdatedAt(LocalDateTime.now());
-        return advertisementRepository.save(a);
-    }
-
-    public void delete(Long id) {
-        advertisementRepository.deleteById(id);
+        Advertisement savedAdvertisement = advertisementRepository.save(advertisement);
+        return advertisementMapper.toResponse(savedAdvertisement);
     }
 
     private Advertisement findByIdOrThrow(Long id) {
         return advertisementRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(NotFoundExceptionMessage.ADVERTISEMENT_NOT_FOUND.getMessage()));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        NotFoundExceptionMessage.ADVERTISEMENT_NOT_FOUND.getMessage()
+                ));
+    }
+
+    private void setAdvertisementDefaults(Advertisement advertisement, User author, Category category) {
+        LocalDateTime now = LocalDateTime.now();
+
+        advertisement.setAuthor(author);
+        advertisement.setCategory(category);
+        advertisement.setStatus(AdvertisementStatus.DRAFT);
+        advertisement.setCreatedAt(now);
+        advertisement.setUpdatedAt(now);
+
+        // TODO ДОБАВИТЬ ПРИВЯЗКУ ИЗОБРАЖЕНИЙ
+    }
+
+    private void validateOwnership(Advertisement advertisement, UUID userId) {
+        if (!advertisement.getAuthor().getId().equals(userId)) {
+            throw new RuntimeException("Forbidden");
+        }
+    }
+
+    private void validatePublishAllowed(Advertisement advertisement) {
+        if (advertisement.getStatus() != AdvertisementStatus.DRAFT) {
+            throw new RuntimeException("Only DRAFT can be published");
+        }
     }
 }

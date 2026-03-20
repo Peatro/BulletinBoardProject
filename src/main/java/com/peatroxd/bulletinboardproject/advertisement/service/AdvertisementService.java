@@ -1,23 +1,24 @@
 package com.peatroxd.bulletinboardproject.advertisement.service;
 
 import com.peatroxd.bulletinboardproject.advertisement.dto.request.AdvertisementCreateRequest;
-import com.peatroxd.bulletinboardproject.advertisement.entity.Advertisement;
+import com.peatroxd.bulletinboardproject.advertisement.dto.response.AdvertisementResponse;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 public interface AdvertisementService {
 
-    Advertisement create(AdvertisementCreateRequest request, UUID userId);
+    AdvertisementResponse createAdvertisement(AdvertisementCreateRequest request, UUID userId);
 
-    List<Advertisement> list();
+    List<AdvertisementResponse> getAllAdvertisements();
 
-    Optional<Advertisement> get(Long id);
+    List<AdvertisementResponse> getAllAdvertisementsByUserId(UUID userId);
 
-    Advertisement update(Advertisement a);
+    AdvertisementResponse getAdvertisementById(Long id);
 
-    void delete(Long id);
+    AdvertisementResponse updateAdvertisement(AdvertisementCreateRequest request);
 
-    Advertisement publish(Long id, UUID userId);
+    void deleteAdvertisement(Long id);
+
+    AdvertisementResponse publishAdvertisement(Long id, UUID userId);
 }
