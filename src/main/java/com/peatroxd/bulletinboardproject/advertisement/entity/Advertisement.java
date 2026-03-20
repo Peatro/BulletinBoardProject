@@ -15,6 +15,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -46,6 +47,7 @@ public class Advertisement {
 
     private String description;
 
+    @Positive
     private BigDecimal price;
 
     @Enumerated(EnumType.STRING)
@@ -60,6 +62,7 @@ public class Advertisement {
     private User author;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id")
     @ToString.Exclude
     private Category category;
 
