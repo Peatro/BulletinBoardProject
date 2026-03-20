@@ -13,6 +13,6 @@ public class CategoryFacadeImpl implements CategoryFacade {
     private final CategoryService categoryService;
 
     public Category getById(Long id) {
-        return categoryService.findCategoryById(id);
+        return categoryService.findCategoryByIdOrThrow(id);
     }
 }
