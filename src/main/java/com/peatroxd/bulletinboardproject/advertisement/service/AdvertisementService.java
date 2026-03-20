@@ -1,6 +1,6 @@
 package com.peatroxd.bulletinboardproject.advertisement.service;
 
-import com.peatroxd.bulletinboardproject.advertisement.dto.request.CreateAdvertisementRequest;
+import com.peatroxd.bulletinboardproject.advertisement.dto.request.AdvertisementCreateRequest;
 import com.peatroxd.bulletinboardproject.advertisement.entity.Advertisement;
 
 import java.util.List;
@@ -9,7 +9,7 @@ import java.util.UUID;
 
 public interface AdvertisementService {
 
-    Advertisement create(CreateAdvertisementRequest request, UUID userId);
+    Advertisement create(AdvertisementCreateRequest request, UUID userId);
 
     List<Advertisement> list();
 

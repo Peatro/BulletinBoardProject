@@ -1,13 +1,12 @@
 package com.peatroxd.bulletinboardproject.advertisement.controller.impl;
 
 import com.peatroxd.bulletinboardproject.advertisement.controller.AdvertisementController;
-import com.peatroxd.bulletinboardproject.advertisement.dto.request.CreateAdvertisementRequest;
+import com.peatroxd.bulletinboardproject.advertisement.dto.request.AdvertisementCreateRequest;
 import com.peatroxd.bulletinboardproject.advertisement.dto.response.AdvertisementResponse;
 import com.peatroxd.bulletinboardproject.advertisement.entity.Advertisement;
 import com.peatroxd.bulletinboardproject.advertisement.mapper.AdvertisementMapper;
 import com.peatroxd.bulletinboardproject.advertisement.service.AdvertisementService;
 import com.peatroxd.bulletinboardproject.security.annotation.CurrentUser;
-import com.peatroxd.bulletinboardproject.security.service.CurrentUserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -42,12 +41,12 @@ public class AdvertisementControllerImpl implements AdvertisementController {
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     @PostMapping
     public AdvertisementResponse create(
-            @Valid @RequestBody CreateAdvertisementRequest request,
+            @Valid @RequestBody AdvertisementCreateRequest request,
             @CurrentUser UUID userId
     ) {
         Advertisement advertisement = advertisementService.create(request, userId);
 
-        return mapper.toAdvertisementResponse(advertisement);
+        return mapper.toAdvertisementResponseDto(advertisement);
     }
 
     @PutMapping("/{id}")
@@ -76,6 +75,6 @@ public class AdvertisementControllerImpl implements AdvertisementController {
     ) {
         Advertisement advertisement = advertisementService.publish(id, userId);
 
-        return mapper.toAdvertisementResponse(advertisement);
+        return mapper.toAdvertisementResponseDto(advertisement);
     }
 }

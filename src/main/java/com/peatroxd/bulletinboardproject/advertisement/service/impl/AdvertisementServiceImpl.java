@@ -1,6 +1,6 @@
 package com.peatroxd.bulletinboardproject.advertisement.service.impl;
 
-import com.peatroxd.bulletinboardproject.advertisement.dto.request.CreateAdvertisementRequest;
+import com.peatroxd.bulletinboardproject.advertisement.dto.request.AdvertisementCreateRequest;
 import com.peatroxd.bulletinboardproject.advertisement.entity.Advertisement;
 import com.peatroxd.bulletinboardproject.advertisement.enums.AdvertisementStatus;
 import com.peatroxd.bulletinboardproject.advertisement.mapper.AdvertisementMapper;
@@ -32,12 +32,12 @@ public class AdvertisementServiceImpl implements AdvertisementService {
     private final AdvertisementMapper mapper;
 
     @Override
-    public Advertisement create(CreateAdvertisementRequest request, UUID userId) {
+    public Advertisement create(AdvertisementCreateRequest request, UUID userId) {
 
         User author = userFacade.getById(userId);
         Category category = categoryFacade.getById(request.categoryId());
 
-        Advertisement advertisement = mapper.toAdvertisement(request);
+        Advertisement advertisement = mapper.toAdvertisementEntity(request);
 
         advertisement.setAuthor(author);
         advertisement.setCategory(category);
