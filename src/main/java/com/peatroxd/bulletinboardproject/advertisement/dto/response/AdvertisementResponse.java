@@ -2,6 +2,7 @@ package com.peatroxd.bulletinboardproject.advertisement.dto.response;
 
 import com.peatroxd.bulletinboardproject.advertisement.enums.AdvertisementStatus;
 import com.peatroxd.bulletinboardproject.advertisement.enums.AdvertisementType;
+import com.peatroxd.bulletinboardproject.image.entity.Image;
 import lombok.Builder;
 
 import java.math.BigDecimal;
@@ -22,7 +23,7 @@ public record AdvertisementResponse(
         String authorPhone,
         Long categoryId,
         String categoryName,
-        List<String> imageUrls,
+        List<String> imagesKeys,
         LocalDateTime createdAt
 ) {
 }

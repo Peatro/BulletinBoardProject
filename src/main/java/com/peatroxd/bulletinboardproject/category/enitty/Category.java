@@ -19,11 +19,10 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-@RequiredArgsConstructor
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "category")
+@Table(name = "categories")
 public class Category {
     @Id
     @Column(name = "id", nullable = false)
