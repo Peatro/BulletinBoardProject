@@ -14,6 +14,8 @@ public class UserFacadeImpl implements UserFacade {
 
     private final UserService userService;
 
+
+
     @Override
     public User getById(UUID userId) {
         return userService.getUser(userId);

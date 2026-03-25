@@ -4,7 +4,7 @@ import com.peatroxd.bulletinboardproject.common.enums.NotFoundExceptionMessage;
 import com.peatroxd.bulletinboardproject.common.exception.ResourceNotFoundException;
 import com.peatroxd.bulletinboardproject.security.Role;
 import com.peatroxd.bulletinboardproject.security.keycloak.KeycloakAdminClient;
-import com.peatroxd.bulletinboardproject.user.dto.request.UserCreateRequest;
+import com.peatroxd.bulletinboardproject.auth.dto.request.AuthRegisterRequest;
 import com.peatroxd.bulletinboardproject.user.entity.User;
 import com.peatroxd.bulletinboardproject.user.repository.UserRepository;
 import com.peatroxd.bulletinboardproject.user.service.UserService;
@@ -20,13 +20,13 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final KeycloakAdminClient keycloakAdminClient;
 
-    public User createUser(UserCreateRequest request, Role role) {
+    public User createUser(AuthRegisterRequest request, Role role) {
         UUID keycloakUserId = keycloakAdminClient.createUser(request, role);
         User user = User.builder()
                 .keycloakUserId(keycloakUserId)
                 .username(request.username())
                 .email(request.email())
-                .name(request.name())
+                .name(request.firstName())
                 .phone(request.phone())
                 .role(role)
                 .enabled(true)

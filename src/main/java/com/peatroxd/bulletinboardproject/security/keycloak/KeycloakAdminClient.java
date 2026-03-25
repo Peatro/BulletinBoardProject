@@ -2,7 +2,7 @@ package com.peatroxd.bulletinboardproject.security.keycloak;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.peatroxd.bulletinboardproject.security.Role;
-import com.peatroxd.bulletinboardproject.user.dto.request.UserCreateRequest;
+import com.peatroxd.bulletinboardproject.auth.dto.request.AuthRegisterRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -29,7 +29,7 @@ public class KeycloakAdminClient {
     private final KeycloakAdminProperties properties;
     private final RestTemplate restTemplate;
 
-    public UUID createUser(UserCreateRequest request, Role role) {
+    public UUID createUser(AuthRegisterRequest request, Role role) {
         String token = getAccessToken();
         UUID userId = createKeycloakUser(request, token);
         assignRealmRole(userId, role.name(), token);
@@ -47,16 +47,18 @@ public class KeycloakAdminClient {
         );
     }
 
-    private UUID createKeycloakUser(UserCreateRequest request, String token) {
+    private UUID createKeycloakUser(AuthRegisterRequest request, String token) {
         String url = normalizeBaseUrl() + "/admin/realms/" + requireRealm() + "/users";
 
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("username", request.username());
         payload.put("email", request.email());
         payload.put("enabled", true);
+        payload.put("emailVerified", true);
+        payload.put("requiredActions", List.of());
 
-        if (StringUtils.hasText(request.name())) {
-            payload.put("firstName", request.name());
+        if (StringUtils.hasText(request.firstName())) {
+            payload.put("firstName", request.firstName());
         }
 
         Map<String, List<String>> attributes = new HashMap<>();

@@ -1,7 +1,9 @@
 package com.peatroxd.bulletinboardproject.auth.controller;
 
+import com.peatroxd.bulletinboardproject.auth.dto.request.AuthLoginRequest;
+import com.peatroxd.bulletinboardproject.auth.dto.response.AuthTokenResponse;
 import com.peatroxd.bulletinboardproject.auth.service.AuthService;
-import com.peatroxd.bulletinboardproject.user.dto.request.UserCreateRequest;
+import com.peatroxd.bulletinboardproject.auth.dto.request.AuthRegisterRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,8 +19,13 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<Void> register(@RequestBody UserCreateRequest request) {
+    public ResponseEntity<Void> register(@RequestBody AuthRegisterRequest request) {
         authService.register(request);
         return ResponseEntity.status(201).build();
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<AuthTokenResponse> login(@RequestBody AuthLoginRequest request) {
+        return ResponseEntity.ok(authService.login(request));
     }
 }

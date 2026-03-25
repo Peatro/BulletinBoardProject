@@ -46,7 +46,10 @@ public class User {
     @Column(nullable = false)
     private String email;
 
-    private String name;
+    @Column(nullable = false)
+    private String firstName;
+
+    private String lastName;
 
     private String phone;
 
