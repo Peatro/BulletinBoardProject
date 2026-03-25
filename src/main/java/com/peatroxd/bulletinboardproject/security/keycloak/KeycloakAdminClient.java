@@ -2,7 +2,6 @@ package com.peatroxd.bulletinboardproject.security.keycloak;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.peatroxd.bulletinboardproject.security.Role;
-import com.peatroxd.bulletinboardproject.auth.dto.request.AuthRegisterRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -29,9 +28,17 @@ public class KeycloakAdminClient {
     private final KeycloakAdminProperties properties;
     private final RestTemplate restTemplate;
 
-    public UUID createUser(AuthRegisterRequest request, Role role) {
+    public UUID createUser(
+            String username,
+            String email,
+            String firstName,
+            String lastName,
+            String phone,
+            String password,
+            Role role
+    ) {
         String token = getAccessToken();
-        UUID userId = createKeycloakUser(request, token);
+        UUID userId = createKeycloakUser(username, email, firstName, lastName, phone, password, token);
         assignRealmRole(userId, role.name(), token);
         return userId;
     }
@@ -47,23 +54,30 @@ public class KeycloakAdminClient {
         );
     }
 
-    private UUID createKeycloakUser(AuthRegisterRequest request, String token) {
+    private UUID createKeycloakUser(
+            String username,
+            String email,
+            String firstName,
+            String lastName,
+            String phone,
+            String password,
+            String token
+    ) {
         String url = normalizeBaseUrl() + "/admin/realms/" + requireRealm() + "/users";
 
         Map<String, Object> payload = new LinkedHashMap<>();
-        payload.put("username", request.username());
-        payload.put("email", request.email());
+        payload.put("username", username);
+        payload.put("firstName", firstName);
+        payload.put("email", email);
         payload.put("enabled", true);
-        payload.put("emailVerified", true);
-        payload.put("requiredActions", List.of());
 
-        if (StringUtils.hasText(request.firstName())) {
-            payload.put("firstName", request.firstName());
+        if (StringUtils.hasText(lastName)) {
+            payload.put("lastName", lastName);
         }
 
         Map<String, List<String>> attributes = new HashMap<>();
-        if (StringUtils.hasText(request.phone())) {
-            attributes.put("phone", List.of(request.phone()));
+        if (StringUtils.hasText(phone)) {
+            attributes.put("phone", List.of(phone));
         }
         if (!attributes.isEmpty()) {
             payload.put("attributes", attributes);
@@ -71,7 +85,7 @@ public class KeycloakAdminClient {
 
         Map<String, Object> credential = new LinkedHashMap<>();
         credential.put("type", "password");
-        credential.put("value", request.password());
+        credential.put("value", password);
         credential.put("temporary", false);
         payload.put("credentials", List.of(credential));
 

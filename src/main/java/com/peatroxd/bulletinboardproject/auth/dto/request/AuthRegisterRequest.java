@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Size;
 
 public record AuthRegisterRequest(
         @NotBlank
-        @Size(min = 3, max = 255)
+        @Size(max = 100)
         String username,
 
         @NotBlank
@@ -15,10 +15,10 @@ public record AuthRegisterRequest(
         String email,
 
         @NotBlank
-        @Size(max = 255)
+        @Size(max = 100)
         String firstName,
 
-        @Size(max = 255)
+        @Size(max = 100)
         String lastName,
 
         @Size(max = 30)
