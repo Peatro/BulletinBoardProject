@@ -22,5 +22,15 @@ spring:
         jwt:
           issuer-uri: http://localhost:8081/realms/board-realm
 
+keycloak:
+  admin:
+    server-url: ${KEYCLOAK_BASE_URL:http://localhost:8081}
+    realm: ${KEYCLOAK_REALM:board-realm}
+    token-realm: ${KEYCLOAK_TOKEN_REALM:${KEYCLOAK_REALM:board-realm}}
+    client-id: ${KEYCLOAK_CLIENT_ID:admin-cli}
+    client-secret: ${KEYCLOAK_CLIENT_SECRET:}
+    username: ${KEYCLOAK_ADMIN:}
+    password: ${KEYCLOAK_ADMIN_PASSWORD:}
+
 server:
   port: 9090

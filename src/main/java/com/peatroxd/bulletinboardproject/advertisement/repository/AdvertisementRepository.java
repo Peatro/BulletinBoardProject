@@ -9,5 +9,5 @@ import java.util.UUID;
 
 @Repository
 public interface AdvertisementRepository extends JpaRepository<Advertisement, Long> {
-    List<Advertisement> findAllByAuthor_Id(UUID authorId);
+    List<Advertisement> findAllByAuthor_KeycloakUserId(UUID keycloakUserId);
 }

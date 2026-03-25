@@ -272,4 +272,25 @@ databaseChangeLog:
             constraintName: FK_IMAGES_ON_ADVERTISEMENT
             referencedColumnNames: id
             referencedTableName: advertisement
+  - changeSet:
+      id: 1774025450008-13
+      author: Peatr
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addColumn:
+            tableName: users
+            columns:
+              - column:
+                  name: keycloak_user_id
+                  type: uuid
+        - sql:
+            sql: UPDATE users SET keycloak_user_id = id WHERE keycloak_user_id IS NULL
+        - addNotNullConstraint:
+            tableName: users
+            columnName: keycloak_user_id
+            columnDataType: uuid
+        - addUniqueConstraint:
+            tableName: users
+            columnNames: keycloak_user_id
+            constraintName: uc_users_keycloak_user_id
 

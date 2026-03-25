@@ -18,4 +18,9 @@ public class UserFacadeImpl implements UserFacade {
     public User getById(UUID userId) {
         return userService.getUser(userId);
     }
+
+    @Override
+    public User getByKeycloakId(UUID keycloakUserId) {
+        return userService.findByKeycloakUserIdOrThrow(keycloakUserId);
+    }
 }

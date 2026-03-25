@@ -1,7 +1,8 @@
 package com.peatroxd.bulletinboardproject.user.controller.impl;
 
-import com.peatroxd.bulletinboardproject.security.Role;
 import com.peatroxd.bulletinboardproject.user.controller.UserController;
+import com.peatroxd.bulletinboardproject.security.Role;
+import com.peatroxd.bulletinboardproject.user.dto.request.UserCreateRequest;
 import com.peatroxd.bulletinboardproject.user.entity.User;
 import com.peatroxd.bulletinboardproject.user.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -31,8 +32,8 @@ public class UserControllerImpl implements UserController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public User createUser(@RequestBody User user, @RequestParam Role role) {
-        return userService.createUser(user, role);
+    public User createUser(@RequestBody UserCreateRequest request, @RequestParam Role role) {
+        return userService.createUser(request, role);
     }
 
     @PutMapping("/{id}")

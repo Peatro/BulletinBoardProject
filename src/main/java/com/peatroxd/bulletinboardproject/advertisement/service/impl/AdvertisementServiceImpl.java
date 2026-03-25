@@ -33,7 +33,7 @@ public class AdvertisementServiceImpl implements AdvertisementService {
     @Override
     @Transactional
     public AdvertisementResponse createAdvertisement(AdvertisementCreateRequest request, UUID userId) {
-        User author = userFacade.getById(userId);
+        User author = userFacade.getByKeycloakId(userId);
         Category category = categoryFacade.getById(request.categoryId());
 
         Advertisement advertisement = advertisementMapper.toEntity(request);
@@ -53,7 +53,7 @@ public class AdvertisementServiceImpl implements AdvertisementService {
 
     @Override
     public List<AdvertisementResponse> getAllAdvertisementsByUserId(UUID userId) {
-        return advertisementRepository.findAllByAuthor_Id(userId)
+        return advertisementRepository.findAllByAuthor_KeycloakUserId(userId)
                 .stream()
                 .map(advertisementMapper::toResponse)
                 .toList();
@@ -115,7 +115,7 @@ public class AdvertisementServiceImpl implements AdvertisementService {
     }
 
     private void validateOwnership(Advertisement advertisement, UUID userId) {
-        if (!advertisement.getAuthor().getId().equals(userId)) {
+        if (!advertisement.getAuthor().getKeycloakUserId().equals(userId)) {
             throw new RuntimeException("Forbidden");
         }
     }

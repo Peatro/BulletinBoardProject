@@ -7,4 +7,6 @@ import java.util.UUID;
 public interface UserFacade {
 
     User getById(UUID id);
+
+    User getByKeycloakId(UUID keycloakUserId);
 }
