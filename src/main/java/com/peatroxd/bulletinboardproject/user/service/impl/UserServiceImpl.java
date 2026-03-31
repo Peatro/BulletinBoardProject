@@ -3,8 +3,6 @@ package com.peatroxd.bulletinboardproject.user.service.impl;
 import com.peatroxd.bulletinboardproject.common.enums.NotFoundExceptionMessage;
 import com.peatroxd.bulletinboardproject.common.exception.ResourceNotFoundException;
 import com.peatroxd.bulletinboardproject.security.Role;
-import com.peatroxd.bulletinboardproject.security.keycloak.KeycloakAdminClient;
-import com.peatroxd.bulletinboardproject.user.dto.request.UserCreateRequest;
 import com.peatroxd.bulletinboardproject.user.entity.User;
 import com.peatroxd.bulletinboardproject.user.repository.UserRepository;
 import com.peatroxd.bulletinboardproject.user.service.UserService;
@@ -18,28 +16,9 @@ import java.util.UUID;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
-    private final KeycloakAdminClient keycloakAdminClient;
 
-    public User createUser(UserCreateRequest request, Role role) {
-        UUID keycloakUserId = keycloakAdminClient.createUser(request, role);
-        User user = User.builder()
-                .keycloakUserId(keycloakUserId)
-                .username(request.username())
-                .email(request.email())
-                .name(request.name())
-                .phone(request.phone())
-                .role(role)
-                .enabled(true)
-                .build();
-        try {
-            return userRepository.save(user);
-        } catch (RuntimeException ex) {
-            try {
-                keycloakAdminClient.deleteUser(keycloakUserId);
-            } catch (RuntimeException ignored) {
-            }
-            throw ex;
-        }
+    public User createLocalUser(User user) {
+        return userRepository.save(user);
     }
 
     public User getUser(UUID id) {
@@ -50,7 +29,8 @@ public class UserServiceImpl implements UserService {
         User existing = findUserByIdOrThrow(id);
         existing.setUsername(user.getUsername());
         existing.setEmail(user.getEmail());
-        existing.setName(user.getName());
+        existing.setFirstName(user.getFirstName());
+        existing.setLastName(user.getLastName());
         existing.setPhone(user.getPhone());
         existing.setRole(role);
         existing.setEnabled(user.isEnabled());

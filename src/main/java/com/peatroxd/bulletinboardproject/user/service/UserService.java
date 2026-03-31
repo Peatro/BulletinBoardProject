@@ -1,14 +1,13 @@
 package com.peatroxd.bulletinboardproject.user.service;
 
 import com.peatroxd.bulletinboardproject.security.Role;
-import com.peatroxd.bulletinboardproject.user.dto.request.UserCreateRequest;
 import com.peatroxd.bulletinboardproject.user.entity.User;
 
 import java.util.UUID;
 
 public interface UserService {
 
-    User createUser(UserCreateRequest request, Role role);
+    User createLocalUser(User user);
 
     User getUser(UUID id);
 

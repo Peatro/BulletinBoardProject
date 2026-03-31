@@ -1,8 +1,7 @@
 package com.peatroxd.bulletinboardproject.user.controller.impl;
 
-import com.peatroxd.bulletinboardproject.user.controller.UserController;
 import com.peatroxd.bulletinboardproject.security.Role;
-import com.peatroxd.bulletinboardproject.user.dto.request.UserCreateRequest;
+import com.peatroxd.bulletinboardproject.user.controller.UserController;
 import com.peatroxd.bulletinboardproject.user.entity.User;
 import com.peatroxd.bulletinboardproject.user.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -10,9 +9,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -20,6 +19,7 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api/users")
 public class UserControllerImpl implements UserController {
 
     private final UserService userService;
@@ -28,12 +28,6 @@ public class UserControllerImpl implements UserController {
     @PreAuthorize("hasRole('ADMIN')")
     public User getUserById(@PathVariable UUID id) {
         return userService.getUser(id);
-    }
-
-    @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public User createUser(@RequestBody UserCreateRequest request, @RequestParam Role role) {
-        return userService.createUser(request, role);
     }
 
     @PutMapping("/{id}")

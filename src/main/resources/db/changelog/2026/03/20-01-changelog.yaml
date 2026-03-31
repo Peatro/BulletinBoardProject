@@ -293,4 +293,27 @@ databaseChangeLog:
             tableName: users
             columnNames: keycloak_user_id
             constraintName: uc_users_keycloak_user_id
+  - changeSet:
+      id: 1774025450008-14
+      author: Peatr
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addColumn:
+            tableName: users
+            columns:
+              - column:
+                  name: first_name
+                  type: VARCHAR(255)
+              - column:
+                  name: last_name
+                  type: VARCHAR(255)
+        - sql:
+            sql: UPDATE users SET first_name = COALESCE(name, username)
+        - addNotNullConstraint:
+            tableName: users
+            columnName: first_name
+            columnDataType: VARCHAR(255)
+        - dropColumn:
+            tableName: users
+            columnName: name
 
