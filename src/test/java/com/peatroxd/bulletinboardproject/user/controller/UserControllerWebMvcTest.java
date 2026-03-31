@@ -3,6 +3,7 @@ package com.peatroxd.bulletinboardproject.user.controller;
 import com.peatroxd.bulletinboardproject.common.exception.GlobalExceptionHandler;
 import com.peatroxd.bulletinboardproject.security.service.CurrentUserArgumentResolver;
 import com.peatroxd.bulletinboardproject.user.controller.impl.UserControllerImpl;
+import com.peatroxd.bulletinboardproject.user.dto.request.AdminUserUpdateRequest;
 import com.peatroxd.bulletinboardproject.user.dto.request.UserUpdateRequest;
 import com.peatroxd.bulletinboardproject.user.dto.response.UserResponse;
 import com.peatroxd.bulletinboardproject.user.service.UserService;
@@ -110,6 +111,68 @@ class UserControllerWebMvcTest {
                 .andExpect(jsonPath("$.phone").value("+79990000000"));
 
         verify(userService).updateCurrentUser(keycloakUserId, request);
+    }
+
+    @Test
+    void getUserByIdShouldReturnDtoForAdminEndpoint() throws Exception {
+        UUID userId = UUID.randomUUID();
+        UserResponse response = userResponse(UUID.randomUUID());
+
+        when(userService.getUser(userId)).thenReturn(response);
+
+        mockMvc.perform(get("/api/users/{id}", userId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value("alice"))
+                .andExpect(jsonPath("$.role").value("USER"));
+
+        verify(userService).getUser(userId);
+    }
+
+    @Test
+    void updateUserShouldAcceptAdminDtoBody() throws Exception {
+        UUID userId = UUID.randomUUID();
+        AdminUserUpdateRequest request = new AdminUserUpdateRequest(
+                "moderator",
+                "moderator@example.com",
+                "Mila",
+                "Brown",
+                "+79991112233",
+                com.peatroxd.bulletinboardproject.security.Role.ADMIN,
+                false
+        );
+        UserResponse response = new UserResponse(
+                userId,
+                UUID.randomUUID(),
+                "moderator",
+                "moderator@example.com",
+                "Mila",
+                "Brown",
+                "+79991112233",
+                "ADMIN",
+                false
+        );
+
+        when(userService.updateUser(userId, request)).thenReturn(response);
+
+        mockMvc.perform(put("/api/users/{id}", userId)
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "username": "moderator",
+                                  "email": "moderator@example.com",
+                                  "firstName": "Mila",
+                                  "lastName": "Brown",
+                                  "phone": "+79991112233",
+                                  "role": "ADMIN",
+                                  "enabled": false
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value("moderator"))
+                .andExpect(jsonPath("$.role").value("ADMIN"))
+                .andExpect(jsonPath("$.enabled").value(false));
+
+        verify(userService).updateUser(userId, request);
     }
 
     private void setCurrentJwtUser(UUID userId) {

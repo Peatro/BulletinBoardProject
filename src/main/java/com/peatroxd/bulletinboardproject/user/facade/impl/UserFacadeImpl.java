@@ -19,7 +19,7 @@ public class UserFacadeImpl implements UserFacade {
 
     @Override
     public User getById(UUID userId) {
-        return userService.getUser(userId);
+        return userService.findByIdOrThrow(userId);
     }
 
     @Override

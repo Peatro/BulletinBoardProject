@@ -1,5 +1,7 @@
 package com.peatroxd.bulletinboardproject.user.service;
 
+import com.peatroxd.bulletinboardproject.security.Role;
+import com.peatroxd.bulletinboardproject.user.dto.request.AdminUserUpdateRequest;
 import com.peatroxd.bulletinboardproject.user.dto.request.UserUpdateRequest;
 import com.peatroxd.bulletinboardproject.user.dto.response.UserResponse;
 import com.peatroxd.bulletinboardproject.user.entity.User;
@@ -15,6 +17,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -65,6 +68,51 @@ class UserServiceImplTest {
         assertThat(response.phone()).isEqualTo("+79990000000");
     }
 
+    @Test
+    void getUserShouldReturnAdminSafeDto() {
+        UUID userId = UUID.randomUUID();
+        User user = user(UUID.randomUUID());
+        user.setId(userId);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+
+        UserResponse response = userService.getUser(userId);
+
+        assertThat(response.id()).isEqualTo(userId);
+        assertThat(response.username()).isEqualTo("alice");
+        assertThat(response.role()).isEqualTo("USER");
+    }
+
+    @Test
+    void updateUserShouldPersistAdminChangesAndReturnDto() {
+        UUID userId = UUID.randomUUID();
+        User user = user(UUID.randomUUID());
+        user.setId(userId);
+        AdminUserUpdateRequest request = new AdminUserUpdateRequest(
+                "moderator",
+                "moderator@example.com",
+                "Mila",
+                "Brown",
+                "+79991112233",
+                Role.ADMIN,
+                false
+        );
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(userRepository.save(user)).thenReturn(user);
+
+        UserResponse response = userService.updateUser(userId, request);
+
+        assertThat(response.username()).isEqualTo("moderator");
+        assertThat(response.email()).isEqualTo("moderator@example.com");
+        assertThat(response.firstName()).isEqualTo("Mila");
+        assertThat(response.lastName()).isEqualTo("Brown");
+        assertThat(response.phone()).isEqualTo("+79991112233");
+        assertThat(response.role()).isEqualTo("ADMIN");
+        assertThat(response.enabled()).isFalse();
+        verify(userRepository).save(user);
+    }
+
     private User user(UUID keycloakUserId) {
         return User.builder()
                 .id(UUID.randomUUID())
@@ -74,7 +122,7 @@ class UserServiceImplTest {
                 .firstName("Alice")
                 .lastName("Smith")
                 .phone("+70000000000")
-                .role(com.peatroxd.bulletinboardproject.security.Role.USER)
+                .role(Role.USER)
                 .enabled(true)
                 .build();
     }
