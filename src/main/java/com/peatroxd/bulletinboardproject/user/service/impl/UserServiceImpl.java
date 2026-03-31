@@ -6,6 +6,7 @@ import com.peatroxd.bulletinboardproject.user.dto.request.AdminUserUpdateRequest
 import com.peatroxd.bulletinboardproject.user.dto.request.UserUpdateRequest;
 import com.peatroxd.bulletinboardproject.user.dto.response.UserResponse;
 import com.peatroxd.bulletinboardproject.user.entity.User;
+import com.peatroxd.bulletinboardproject.user.mapper.UserMapper;
 import com.peatroxd.bulletinboardproject.user.repository.UserRepository;
 import com.peatroxd.bulletinboardproject.user.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,7 @@ import java.util.UUID;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
     public User createLocalUser(User user) {
         return userRepository.save(user);
@@ -33,22 +35,13 @@ public class UserServiceImpl implements UserService {
 
     public UserResponse updateCurrentUser(UUID keycloakUserId, UserUpdateRequest request) {
         User existing = findByKeycloakUserIdOrThrow(keycloakUserId);
-        existing.setEmail(request.email());
-        existing.setFirstName(request.firstName());
-        existing.setLastName(request.lastName());
-        existing.setPhone(request.phone());
+        userMapper.updateCurrentUser(request, existing);
         return UserResponse.from(userRepository.save(existing));
     }
 
     public UserResponse updateUser(UUID id, AdminUserUpdateRequest request) {
         User existing = findByIdOrThrow(id);
-        existing.setUsername(request.username());
-        existing.setEmail(request.email());
-        existing.setFirstName(request.firstName());
-        existing.setLastName(request.lastName());
-        existing.setPhone(request.phone());
-        existing.setRole(request.role());
-        existing.setEnabled(request.enabled());
+        userMapper.updateAdminUser(request, existing);
         return UserResponse.from(userRepository.save(existing));
     }
 

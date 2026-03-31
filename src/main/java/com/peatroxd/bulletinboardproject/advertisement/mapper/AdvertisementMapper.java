@@ -6,6 +6,7 @@ import com.peatroxd.bulletinboardproject.advertisement.entity.Advertisement;
 import com.peatroxd.bulletinboardproject.image.entity.Image;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 
 import java.util.List;
 
@@ -17,6 +18,7 @@ public interface AdvertisementMapper {
     @Mapping(target = "type", source = "advertisementType")
     @Mapping(target = "author", ignore = true)
     @Mapping(target = "category", ignore = true)
+    @Mapping(target = "images", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "publishedAt", ignore = true)
@@ -29,6 +31,17 @@ public interface AdvertisementMapper {
     @Mapping(target = "authorPhone", source = "author.phone")
     @Mapping(target = "imagesKeys", source = "images")
     AdvertisementResponse toResponse(Advertisement advertisement);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "status", ignore = true)
+    @Mapping(target = "type", source = "advertisementType")
+    @Mapping(target = "author", ignore = true)
+    @Mapping(target = "category", ignore = true)
+    @Mapping(target = "images", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "publishedAt", ignore = true)
+    void updateEntity(AdvertisementCreateRequest request, @MappingTarget Advertisement advertisement);
 
     default List<String> mapImagesToImageKeys(List<Image> images) {
         if (images == null) {

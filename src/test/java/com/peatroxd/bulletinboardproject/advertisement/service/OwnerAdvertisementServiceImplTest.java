@@ -30,6 +30,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -166,6 +167,15 @@ class OwnerAdvertisementServiceImplTest {
         when(categoryFacade.getById(CATEGORY_ID)).thenReturn(category);
         when(advertisementRepository.save(advertisement)).thenReturn(advertisement);
         when(advertisementMapper.toResponse(advertisement)).thenReturn(response);
+        doAnswer(invocation -> {
+            AdvertisementCreateRequest updateRequest = invocation.getArgument(0);
+            Advertisement targetAdvertisement = invocation.getArgument(1);
+            targetAdvertisement.setTitle(updateRequest.title());
+            targetAdvertisement.setDescription(updateRequest.description());
+            targetAdvertisement.setPrice(updateRequest.price());
+            targetAdvertisement.setType(updateRequest.advertisementType());
+            return null;
+        }).when(advertisementMapper).updateEntity(request, advertisement);
 
         AdvertisementResponse actual = ownerAdvertisementService.updateAdvertisement(ADVERTISEMENT_ID, request, USER_ID);
 

@@ -5,6 +5,7 @@ import com.peatroxd.bulletinboardproject.user.dto.request.AdminUserUpdateRequest
 import com.peatroxd.bulletinboardproject.user.dto.request.UserUpdateRequest;
 import com.peatroxd.bulletinboardproject.user.dto.response.UserResponse;
 import com.peatroxd.bulletinboardproject.user.entity.User;
+import com.peatroxd.bulletinboardproject.user.mapper.UserMapper;
 import com.peatroxd.bulletinboardproject.user.repository.UserRepository;
 import com.peatroxd.bulletinboardproject.user.service.impl.UserServiceImpl;
 import org.junit.jupiter.api.Test;
@@ -17,14 +18,19 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doAnswer;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceImplTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private UserMapper userMapper;
 
     @InjectMocks
     private UserServiceImpl userService;
@@ -59,6 +65,15 @@ class UserServiceImplTest {
 
         when(userRepository.findByKeycloakUserId(keycloakUserId)).thenReturn(Optional.of(user));
         when(userRepository.save(user)).thenReturn(user);
+        doAnswer(invocation -> {
+            UserUpdateRequest updateRequest = invocation.getArgument(0);
+            User targetUser = invocation.getArgument(1);
+            targetUser.setEmail(updateRequest.email());
+            targetUser.setFirstName(updateRequest.firstName());
+            targetUser.setLastName(updateRequest.lastName());
+            targetUser.setPhone(updateRequest.phone());
+            return null;
+        }).when(userMapper).updateCurrentUser(request, user);
 
         UserResponse response = userService.updateCurrentUser(keycloakUserId, request);
 
@@ -100,6 +115,18 @@ class UserServiceImplTest {
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(userRepository.save(user)).thenReturn(user);
+        doAnswer(invocation -> {
+            AdminUserUpdateRequest updateRequest = invocation.getArgument(0);
+            User targetUser = invocation.getArgument(1);
+            targetUser.setUsername(updateRequest.username());
+            targetUser.setEmail(updateRequest.email());
+            targetUser.setFirstName(updateRequest.firstName());
+            targetUser.setLastName(updateRequest.lastName());
+            targetUser.setPhone(updateRequest.phone());
+            targetUser.setRole(updateRequest.role());
+            targetUser.setEnabled(updateRequest.enabled());
+            return null;
+        }).when(userMapper).updateAdminUser(request, user);
 
         UserResponse response = userService.updateUser(userId, request);
 
