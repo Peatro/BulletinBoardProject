@@ -117,19 +117,40 @@ class AdvertisementControllerWebMvcTest {
 
     @Test
     void updateAdvertisementShouldBeAvailableViaPutWithId() throws Exception {
+        UUID userId = UUID.randomUUID();
+        setCurrentJwtUser(userId);
+        AdvertisementCreateRequest request = new AdvertisementCreateRequest(
+                "Updated title",
+                "Updated description",
+                BigDecimal.valueOf(2000),
+                CATEGORY_ID,
+                AdvertisementType.SELL
+        );
+        AdvertisementResponse response = AdvertisementResponse.builder()
+                .id(ADVERTISEMENT_ID)
+                .title("Updated title")
+                .build();
+
+        when(advertisementService.updateAdvertisement(ADVERTISEMENT_ID, request, userId)).thenReturn(response);
+
         mockMvc.perform(put("/advertisements/{id}", ADVERTISEMENT_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(UPDATE_REQUEST_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(ADVERTISEMENT_ID));
+
+        verify(advertisementService).updateAdvertisement(ADVERTISEMENT_ID, request, userId);
     }
 
     @Test
     void deleteAdvertisementShouldBeAvailableViaDeleteWithId() throws Exception {
+        UUID userId = UUID.randomUUID();
+        setCurrentJwtUser(userId);
+
         mockMvc.perform(delete("/advertisements/{id}", ADVERTISEMENT_ID))
                 .andExpect(status().isNoContent());
 
-        verify(advertisementService).deleteAdvertisement(ADVERTISEMENT_ID);
+        verify(advertisementService).deleteAdvertisement(ADVERTISEMENT_ID, userId);
     }
 
     @Test

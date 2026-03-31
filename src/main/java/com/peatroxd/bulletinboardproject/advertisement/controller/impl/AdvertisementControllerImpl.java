@@ -46,17 +46,18 @@ public class AdvertisementControllerImpl implements AdvertisementController {
     @Override
     public ResponseEntity<AdvertisementResponse> updateAdvertisement(
             @PathVariable Long id,
-            @RequestBody AdvertisementCreateRequest request
+            @RequestBody AdvertisementCreateRequest request,
+            @CurrentUser UUID userId
     ) {
-        /// TODO updateAdvertisement
-        return null;
+        return ResponseEntity.ok(advertisementService.updateAdvertisement(id, request, userId));
     }
 
     @Override
     public ResponseEntity<Void> deleteAdvertisement(
-            @PathVariable Long id
+            @PathVariable Long id,
+            @CurrentUser UUID userId
     ) {
-        advertisementService.deleteAdvertisement(id);
+        advertisementService.deleteAdvertisement(id, userId);
         return ResponseEntity.status(204).build();
     }
 

@@ -67,15 +67,28 @@ public class AdvertisementServiceImpl implements AdvertisementService {
 
     @Override
     @Transactional
-    public AdvertisementResponse updateAdvertisement(AdvertisementCreateRequest request) {
-        // TODO
-        return null;
+    public AdvertisementResponse updateAdvertisement(Long id, AdvertisementCreateRequest request, UUID userId) {
+        Advertisement advertisement = findByIdOrThrow(id);
+        Category category = categoryFacade.getById(request.categoryId());
+
+        validateOwnership(advertisement, userId);
+
+        advertisement.setTitle(request.title());
+        advertisement.setDescription(request.description());
+        advertisement.setPrice(request.price());
+        advertisement.setType(request.advertisementType());
+        advertisement.setCategory(category);
+        advertisement.setUpdatedAt(LocalDateTime.now());
+
+        Advertisement savedAdvertisement = advertisementRepository.save(advertisement);
+        return advertisementMapper.toResponse(savedAdvertisement);
     }
 
     @Override
     @Transactional
-    public void deleteAdvertisement(Long id) {
+    public void deleteAdvertisement(Long id, UUID userId) {
         Advertisement advertisement = findByIdOrThrow(id);
+        validateOwnership(advertisement, userId);
         advertisementRepository.delete(advertisement);
     }
 

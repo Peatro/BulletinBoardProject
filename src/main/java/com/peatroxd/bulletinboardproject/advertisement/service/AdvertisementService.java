@@ -16,9 +16,9 @@ public interface AdvertisementService {
 
     AdvertisementResponse getAdvertisementById(Long id);
 
-    AdvertisementResponse updateAdvertisement(AdvertisementCreateRequest request);
+    AdvertisementResponse updateAdvertisement(Long id, AdvertisementCreateRequest request, UUID userId);
 
-    void deleteAdvertisement(Long id);
+    void deleteAdvertisement(Long id, UUID userId);
 
     AdvertisementResponse publishAdvertisement(Long id, UUID userId);
 }

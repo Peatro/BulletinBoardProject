@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -32,18 +33,20 @@ public interface AdvertisementController {
     @GetMapping
     ResponseEntity<List<AdvertisementResponse>> getAllAdvertisements();
 
-    @PostMapping("/{id}")
+    @PutMapping("/{id}")
     ResponseEntity<AdvertisementResponse> updateAdvertisement(
             @PathVariable Long id,
-            @RequestBody AdvertisementCreateRequest request
+            @RequestBody AdvertisementCreateRequest request,
+            @CurrentUser UUID userId
     );
 
-    @DeleteMapping
+    @DeleteMapping("/{id}")
     ResponseEntity<Void> deleteAdvertisement(
-            @PathVariable Long id
+            @PathVariable Long id,
+            @CurrentUser UUID userId
     );
 
-    @PatchMapping
+    @PatchMapping("/{id}")
     ResponseEntity<AdvertisementResponse> publish(
             @PathVariable Long id,
             @CurrentUser UUID userId
