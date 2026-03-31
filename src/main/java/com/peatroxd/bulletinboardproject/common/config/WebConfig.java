@@ -10,8 +10,14 @@ import java.util.List;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
+    private final CurrentUserArgumentResolver currentUserArgumentResolver;
+
+    public WebConfig(CurrentUserArgumentResolver currentUserArgumentResolver) {
+        this.currentUserArgumentResolver = currentUserArgumentResolver;
+    }
+
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
-        resolvers.add(new CurrentUserArgumentResolver());
+        resolvers.add(currentUserArgumentResolver);
     }
 }
