@@ -5,6 +5,7 @@ import com.peatroxd.bulletinboardproject.auth.dto.request.AuthRegisterRequest;
 import com.peatroxd.bulletinboardproject.auth.dto.response.AuthRegisterResponse;
 import com.peatroxd.bulletinboardproject.auth.dto.response.AuthTokenResponse;
 import com.peatroxd.bulletinboardproject.auth.service.AuthService;
+import com.peatroxd.bulletinboardproject.common.exception.RegistrationCompensationException;
 import com.peatroxd.bulletinboardproject.security.Role;
 import com.peatroxd.bulletinboardproject.security.keycloak.KeycloakAuthClient;
 import com.peatroxd.bulletinboardproject.security.keycloak.KeycloakAdminClient;
@@ -28,36 +29,13 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AuthRegisterResponse register(AuthRegisterRequest request) {
         validateRegisterRequest(request);
-        UUID keycloakUserId = keycloakAdminClient.createUser(
-                request.username(),
-                request.email(),
-                request.firstName(),
-                request.lastName(),
-                request.phone(),
-                request.password(),
-                Role.USER
-        );
+        UUID keycloakUserId = registerKeycloakUser(request);
 
         try {
-            UserCreateCommand command = new UserCreateCommand(
-                    keycloakUserId,
-                    request.username(),
-                    request.email(),
-                    request.firstName(),
-                    request.lastName(),
-                    request.phone(),
-                    Role.USER,
-                    true
-            );
-
-            User user = userFacade.createUser(command);
-            return AuthRegisterResponse.from(user);
-        } catch (RuntimeException ex) {
-            try {
-                keycloakAdminClient.deleteUser(keycloakUserId);
-            } catch (RuntimeException ignored) {
-            }
-            throw ex;
+            return persistLocalUser(request, keycloakUserId);
+        } catch (RuntimeException persistenceException) {
+            compensateFailedRegistration(keycloakUserId, persistenceException);
+            throw persistenceException;
         }
     }
 
@@ -94,6 +72,47 @@ public class AuthServiceImpl implements AuthService {
         }
         if (!StringUtils.hasText(request.password())) {
             throw new IllegalArgumentException("Password must not be blank");
+        }
+    }
+
+    private UUID registerKeycloakUser(AuthRegisterRequest request) {
+        return keycloakAdminClient.createUser(
+                request.username(),
+                request.email(),
+                request.firstName(),
+                request.lastName(),
+                request.phone(),
+                request.password(),
+                Role.USER
+        );
+    }
+
+    private AuthRegisterResponse persistLocalUser(AuthRegisterRequest request, UUID keycloakUserId) {
+        UserCreateCommand command = new UserCreateCommand(
+                keycloakUserId,
+                request.username(),
+                request.email(),
+                request.firstName(),
+                request.lastName(),
+                request.phone(),
+                Role.USER,
+                true
+        );
+
+        User user = userFacade.createUser(command);
+        return AuthRegisterResponse.from(user);
+    }
+
+    private void compensateFailedRegistration(UUID keycloakUserId, RuntimeException persistenceException) {
+        try {
+            keycloakAdminClient.deleteUser(keycloakUserId);
+        } catch (RuntimeException compensationException) {
+            RegistrationCompensationException exception = new RegistrationCompensationException(
+                    "Failed to compensate Keycloak user after local persistence error",
+                    persistenceException
+            );
+            exception.addSuppressed(compensationException);
+            throw exception;
         }
     }
 }

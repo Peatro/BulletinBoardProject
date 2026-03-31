@@ -4,6 +4,7 @@ import com.peatroxd.bulletinboardproject.auth.dto.request.AuthLoginRequest;
 import com.peatroxd.bulletinboardproject.auth.dto.request.AuthRegisterRequest;
 import com.peatroxd.bulletinboardproject.auth.dto.response.AuthRegisterResponse;
 import com.peatroxd.bulletinboardproject.auth.dto.response.AuthTokenResponse;
+import com.peatroxd.bulletinboardproject.common.exception.RegistrationCompensationException;
 import com.peatroxd.bulletinboardproject.auth.service.impl.AuthServiceImpl;
 import com.peatroxd.bulletinboardproject.security.Role;
 import com.peatroxd.bulletinboardproject.security.keycloak.KeycloakAdminClient;
@@ -20,6 +21,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -78,6 +80,24 @@ class AuthServiceImplTest {
                 .hasMessage("DB failure");
 
         verify(keycloakAdminClient).deleteUser(keycloakUserId);
+    }
+
+    @Test
+    void registerShouldThrowCompensationExceptionWhenRollbackAlsoFails() {
+        AuthRegisterRequest request = registerRequest();
+        UUID keycloakUserId = UUID.randomUUID();
+
+        mockKeycloakUserCreation(request, keycloakUserId);
+        when(userFacade.createUser(any())).thenThrow(new IllegalStateException("DB failure"));
+        doThrow(new IllegalStateException("Cleanup failure"))
+                .when(keycloakAdminClient).deleteUser(keycloakUserId);
+
+        assertThatThrownBy(() -> authService.register(request))
+                .isInstanceOf(RegistrationCompensationException.class)
+                .hasMessage("Failed to compensate Keycloak user after local persistence error")
+                .cause()
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("DB failure");
     }
 
     @Test
