@@ -3,6 +3,7 @@ package com.peatroxd.bulletinboardproject.user.controller;
 import com.peatroxd.bulletinboardproject.common.exception.GlobalExceptionHandler;
 import com.peatroxd.bulletinboardproject.security.service.CurrentUserArgumentResolver;
 import com.peatroxd.bulletinboardproject.user.controller.impl.UserControllerImpl;
+import com.peatroxd.bulletinboardproject.user.dto.request.UserUpdateRequest;
 import com.peatroxd.bulletinboardproject.user.dto.response.UserResponse;
 import com.peatroxd.bulletinboardproject.user.service.UserService;
 import org.junit.jupiter.api.AfterEach;
@@ -24,6 +25,7 @@ import java.util.UUID;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -55,17 +57,7 @@ class UserControllerWebMvcTest {
     void getCurrentUserShouldReturnAuthenticatedUserProfile() throws Exception {
         UUID keycloakUserId = UUID.randomUUID();
         setCurrentJwtUser(keycloakUserId);
-        UserResponse response = new UserResponse(
-                UUID.randomUUID(),
-                keycloakUserId,
-                "alice",
-                "alice@example.com",
-                "Alice",
-                "Smith",
-                "+70000000000",
-                "USER",
-                true
-        );
+        UserResponse response = userResponse(keycloakUserId);
 
         when(userService.getCurrentUser(keycloakUserId)).thenReturn(response);
 
@@ -78,6 +70,48 @@ class UserControllerWebMvcTest {
         verify(userService).getCurrentUser(keycloakUserId);
     }
 
+    @Test
+    void updateCurrentUserShouldReturnUpdatedProfile() throws Exception {
+        UUID keycloakUserId = UUID.randomUUID();
+        setCurrentJwtUser(keycloakUserId);
+        UserUpdateRequest request = new UserUpdateRequest(
+                "updated@example.com",
+                "Alice",
+                "Johnson",
+                "+79990000000"
+        );
+        UserResponse response = new UserResponse(
+                UUID.randomUUID(),
+                keycloakUserId,
+                "alice",
+                "updated@example.com",
+                "Alice",
+                "Johnson",
+                "+79990000000",
+                "USER",
+                true
+        );
+
+        when(userService.updateCurrentUser(keycloakUserId, request)).thenReturn(response);
+
+        mockMvc.perform(put("/api/users/me")
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "email": "updated@example.com",
+                                  "firstName": "Alice",
+                                  "lastName": "Johnson",
+                                  "phone": "+79990000000"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value("updated@example.com"))
+                .andExpect(jsonPath("$.lastName").value("Johnson"))
+                .andExpect(jsonPath("$.phone").value("+79990000000"));
+
+        verify(userService).updateCurrentUser(keycloakUserId, request);
+    }
+
     private void setCurrentJwtUser(UUID userId) {
         Jwt jwt = Jwt.withTokenValue("token")
                 .header("alg", "none")
@@ -87,6 +121,20 @@ class UserControllerWebMvcTest {
 
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(jwt, null, List.of())
+        );
+    }
+
+    private UserResponse userResponse(UUID keycloakUserId) {
+        return new UserResponse(
+                UUID.randomUUID(),
+                keycloakUserId,
+                "alice",
+                "alice@example.com",
+                "Alice",
+                "Smith",
+                "+70000000000",
+                "USER",
+                true
         );
     }
 }

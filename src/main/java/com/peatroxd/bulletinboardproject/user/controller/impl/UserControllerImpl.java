@@ -4,6 +4,7 @@ import com.peatroxd.bulletinboardproject.common.exception.ApiErrorResponse;
 import com.peatroxd.bulletinboardproject.security.Role;
 import com.peatroxd.bulletinboardproject.security.annotation.CurrentUser;
 import com.peatroxd.bulletinboardproject.user.controller.UserController;
+import com.peatroxd.bulletinboardproject.user.dto.request.UserUpdateRequest;
 import com.peatroxd.bulletinboardproject.user.dto.response.UserResponse;
 import com.peatroxd.bulletinboardproject.user.entity.User;
 import com.peatroxd.bulletinboardproject.user.service.UserService;
@@ -43,6 +44,20 @@ public class UserControllerImpl implements UserController {
     })
     public UserResponse getCurrentUser(@CurrentUser UUID keycloakUserId) {
         return userService.getCurrentUser(keycloakUserId);
+    }
+
+    @PutMapping("/me")
+    @Operation(summary = "Обновить профиль текущего пользователя")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Профиль успешно обновлен"),
+            @ApiResponse(responseCode = "400", description = "Некорректные данные запроса", content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Пользователь не аутентифицирован", content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    })
+    public UserResponse updateCurrentUser(
+            @CurrentUser UUID keycloakUserId,
+            @RequestBody UserUpdateRequest request
+    ) {
+        return userService.updateCurrentUser(keycloakUserId, request);
     }
 
     @GetMapping("/{id}")
