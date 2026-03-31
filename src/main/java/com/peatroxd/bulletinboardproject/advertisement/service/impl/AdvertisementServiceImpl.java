@@ -10,6 +10,8 @@ import com.peatroxd.bulletinboardproject.advertisement.service.AdvertisementServ
 import com.peatroxd.bulletinboardproject.category.enitty.Category;
 import com.peatroxd.bulletinboardproject.category.facade.CategoryFacade;
 import com.peatroxd.bulletinboardproject.common.enums.NotFoundExceptionMessage;
+import com.peatroxd.bulletinboardproject.common.exception.BadRequestException;
+import com.peatroxd.bulletinboardproject.common.exception.ForbiddenOperationException;
 import com.peatroxd.bulletinboardproject.common.exception.ResourceNotFoundException;
 import com.peatroxd.bulletinboardproject.user.entity.User;
 import com.peatroxd.bulletinboardproject.user.facade.UserFacade;
@@ -129,13 +131,13 @@ public class AdvertisementServiceImpl implements AdvertisementService {
 
     private void validateOwnership(Advertisement advertisement, UUID userId) {
         if (!advertisement.getAuthor().getKeycloakUserId().equals(userId)) {
-            throw new RuntimeException("Forbidden");
+            throw new ForbiddenOperationException("Forbidden");
         }
     }
 
     private void validatePublishAllowed(Advertisement advertisement) {
         if (advertisement.getStatus() != AdvertisementStatus.DRAFT) {
-            throw new RuntimeException("Only DRAFT can be published");
+            throw new BadRequestException("Only DRAFT can be published");
         }
     }
 }

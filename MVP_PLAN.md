@@ -109,13 +109,15 @@
 - реализована `updateAdvertisement`
 - добавлена проверка владельца для `update`, `delete`, `publish`
 - service и controller контракт приведены к консистентному использованию текущего пользователя
+- добавлены доменные исключения `BadRequest`, `Forbidden`, `Unauthorized`
+- добавлен глобальный `@ControllerAdvice` с единым error body
+- обработка ошибок зафиксирована controller tests на уровнях `400`, `403`, `404`
 - `gradle test` проходит полностью
 
 Следующий шаг по TDD:
 
-- заменить строковые `RuntimeException` на нормальные доменные/HTTP-исключения
-- добавить глобальный `@ControllerAdvice`
-- зафиксировать обработку ошибок тестами
+- распространить единый error-contract на оставшиеся модули
+- двигаться к `users/me` и `categories API`
 
 ## Целевой MVP
 
@@ -318,7 +320,8 @@
 - update/delete: сделано
 - ownership для update/delete/publish: сделано
 - advertisement controller tests green: сделано
-- exception handler: следующий активный шаг
+- exception handler: сделано
+- единый error-contract для advertisement/auth/security: сделано
 
 ### Итерация 2
 

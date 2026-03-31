@@ -10,6 +10,8 @@ import com.peatroxd.bulletinboardproject.advertisement.repository.AdvertisementR
 import com.peatroxd.bulletinboardproject.advertisement.service.impl.AdvertisementServiceImpl;
 import com.peatroxd.bulletinboardproject.category.enitty.Category;
 import com.peatroxd.bulletinboardproject.category.facade.CategoryFacade;
+import com.peatroxd.bulletinboardproject.common.exception.BadRequestException;
+import com.peatroxd.bulletinboardproject.common.exception.ForbiddenOperationException;
 import com.peatroxd.bulletinboardproject.common.exception.ResourceNotFoundException;
 import com.peatroxd.bulletinboardproject.user.entity.User;
 import com.peatroxd.bulletinboardproject.user.facade.UserFacade;
@@ -146,7 +148,7 @@ class AdvertisementServiceImplTest {
         when(advertisementRepository.findById(ADVERTISEMENT_ID)).thenReturn(Optional.of(advertisement));
 
         assertThatThrownBy(() -> advertisementService.deleteAdvertisement(ADVERTISEMENT_ID, USER_ID))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(ForbiddenOperationException.class)
                 .hasMessage("Forbidden");
 
         verify(advertisementRepository, never()).delete(any());
@@ -194,7 +196,7 @@ class AdvertisementServiceImplTest {
         when(advertisementRepository.findById(ADVERTISEMENT_ID)).thenReturn(Optional.of(advertisement));
 
         assertThatThrownBy(() -> advertisementService.updateAdvertisement(ADVERTISEMENT_ID, request, USER_ID))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(ForbiddenOperationException.class)
                 .hasMessage("Forbidden");
 
         verify(advertisementRepository, never()).save(any());
@@ -235,7 +237,7 @@ class AdvertisementServiceImplTest {
         when(advertisementRepository.findById(ADVERTISEMENT_ID)).thenReturn(Optional.of(advertisement));
 
         assertThatThrownBy(() -> advertisementService.publishAdvertisement(ADVERTISEMENT_ID, USER_ID))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(ForbiddenOperationException.class)
                 .hasMessage("Forbidden");
 
         verify(advertisementRepository, never()).save(any());
@@ -248,7 +250,7 @@ class AdvertisementServiceImplTest {
         when(advertisementRepository.findById(ADVERTISEMENT_ID)).thenReturn(Optional.of(advertisement));
 
         assertThatThrownBy(() -> advertisementService.publishAdvertisement(ADVERTISEMENT_ID, USER_ID))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(BadRequestException.class)
                 .hasMessage("Only DRAFT can be published");
 
         verify(advertisementRepository, never()).save(any());

@@ -1,5 +1,6 @@
 package com.peatroxd.bulletinboardproject.security.service;
 
+import com.peatroxd.bulletinboardproject.common.exception.UnauthorizedException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -42,7 +43,7 @@ class CurrentUserServiceTest {
         authenticate("principal");
 
         assertThatThrownBy(currentUserService::getUserId)
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(UnauthorizedException.class)
                 .hasMessage("No JWT found in security context");
     }
 
