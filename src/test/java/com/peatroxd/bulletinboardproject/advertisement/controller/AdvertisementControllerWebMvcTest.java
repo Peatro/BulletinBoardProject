@@ -13,6 +13,7 @@ import com.peatroxd.bulletinboardproject.common.exception.ForbiddenOperationExce
 import com.peatroxd.bulletinboardproject.common.exception.GlobalExceptionHandler;
 import com.peatroxd.bulletinboardproject.common.exception.ResourceNotFoundException;
 import com.peatroxd.bulletinboardproject.security.service.CurrentUserArgumentResolver;
+import com.peatroxd.bulletinboardproject.security.service.CurrentUserService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -81,7 +82,7 @@ class AdvertisementControllerWebMvcTest {
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(advertisementController)
-                .setCustomArgumentResolvers(new CurrentUserArgumentResolver())
+                .setCustomArgumentResolvers(new CurrentUserArgumentResolver(new CurrentUserService()))
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
     }

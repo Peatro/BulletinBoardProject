@@ -2,6 +2,7 @@ package com.peatroxd.bulletinboardproject.user.controller;
 
 import com.peatroxd.bulletinboardproject.common.exception.GlobalExceptionHandler;
 import com.peatroxd.bulletinboardproject.security.service.CurrentUserArgumentResolver;
+import com.peatroxd.bulletinboardproject.security.service.CurrentUserService;
 import com.peatroxd.bulletinboardproject.user.controller.impl.UserControllerImpl;
 import com.peatroxd.bulletinboardproject.user.dto.request.AdminUserUpdateRequest;
 import com.peatroxd.bulletinboardproject.user.dto.request.UserUpdateRequest;
@@ -44,7 +45,7 @@ class UserControllerWebMvcTest {
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(userController)
-                .setCustomArgumentResolvers(new CurrentUserArgumentResolver())
+                .setCustomArgumentResolvers(new CurrentUserArgumentResolver(new CurrentUserService()))
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
     }
