@@ -39,8 +39,12 @@ public class AdvertisementControllerImpl implements AdvertisementController {
     }
 
     @Override
-    public ResponseEntity<List<AdvertisementResponse>> getAllAdvertisements() {
-        return ResponseEntity.ok(advertisementService.getAllAdvertisements());
+    public ResponseEntity<List<AdvertisementResponse>> getAllAdvertisements(
+            Long categoryId,
+            com.peatroxd.bulletinboardproject.advertisement.enums.AdvertisementStatus status,
+            UUID authorId
+    ) {
+        return ResponseEntity.ok(advertisementService.getAllAdvertisements(categoryId, status, authorId));
     }
 
     @Override

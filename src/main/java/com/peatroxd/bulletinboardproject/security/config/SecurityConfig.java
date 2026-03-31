@@ -31,6 +31,8 @@ public class SecurityConfig {
                                 "/api/auth/**"
                         )
                         .permitAll()
+                        .requestMatchers(HttpMethod.GET, "/advertisements", "/advertisements/*")
+                        .permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/categories/**")
                         .permitAll()
                         .anyRequest()

@@ -108,11 +108,79 @@ class AdvertisementServiceImplTest {
 
     @Test
     void getAdvertisementByIdShouldThrowWhenAdvertisementIsMissing() {
-        when(advertisementRepository.findById(99L)).thenReturn(Optional.empty());
+        when(advertisementRepository.findByIdAndStatus(99L, AdvertisementStatus.PUBLISHED)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> advertisementService.getAdvertisementById(99L))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("Advertisement not found.");
+    }
+
+    @Test
+    void getAdvertisementByIdShouldReturnOnlyPublishedAdvertisement() {
+        Advertisement published = advertisement(AdvertisementStatus.PUBLISHED, author(USER_ID));
+        AdvertisementResponse response = AdvertisementResponse.builder()
+                .id(ADVERTISEMENT_ID)
+                .status(AdvertisementStatus.PUBLISHED)
+                .build();
+
+        when(advertisementRepository.findByIdAndStatus(ADVERTISEMENT_ID, AdvertisementStatus.PUBLISHED))
+                .thenReturn(Optional.of(published));
+        when(advertisementMapper.toResponse(published)).thenReturn(response);
+
+        AdvertisementResponse actual = advertisementService.getAdvertisementById(ADVERTISEMENT_ID);
+
+        assertThat(actual).isEqualTo(response);
+    }
+
+    @Test
+    void getAllAdvertisementsShouldReturnPublishedAdvertisementsByDefault() {
+        Advertisement published = advertisement(AdvertisementStatus.PUBLISHED, author(USER_ID));
+        AdvertisementResponse response = AdvertisementResponse.builder()
+                .id(ADVERTISEMENT_ID)
+                .status(AdvertisementStatus.PUBLISHED)
+                .build();
+
+        when(advertisementRepository.findAllByPublicFilters(AdvertisementStatus.PUBLISHED, null, null))
+                .thenReturn(List.of(published));
+        when(advertisementMapper.toResponse(published)).thenReturn(response);
+
+        List<AdvertisementResponse> actual = advertisementService.getAllAdvertisements(null, null, null);
+
+        assertThat(actual).containsExactly(response);
+    }
+
+    @Test
+    void getAllAdvertisementsShouldApplyProvidedFilters() {
+        Advertisement published = advertisement(AdvertisementStatus.PUBLISHED, author(USER_ID));
+        AdvertisementResponse response = AdvertisementResponse.builder()
+                .id(ADVERTISEMENT_ID)
+                .categoryId(CATEGORY_ID)
+                .authorId(USER_ID)
+                .status(AdvertisementStatus.PUBLISHED)
+                .build();
+
+        when(advertisementRepository.findAllByPublicFilters(AdvertisementStatus.PUBLISHED, CATEGORY_ID, USER_ID))
+                .thenReturn(List.of(published));
+        when(advertisementMapper.toResponse(published)).thenReturn(response);
+
+        List<AdvertisementResponse> actual = advertisementService.getAllAdvertisements(
+                CATEGORY_ID,
+                AdvertisementStatus.PUBLISHED,
+                USER_ID
+        );
+
+        assertThat(actual).containsExactly(response);
+    }
+
+    @Test
+    void getAllAdvertisementsShouldRejectNonPublishedPublicStatusFilter() {
+        assertThatThrownBy(() -> advertisementService.getAllAdvertisements(
+                null,
+                AdvertisementStatus.DRAFT,
+                null
+        ))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Public list supports only PUBLISHED status");
     }
 
     @Test
