@@ -44,6 +44,13 @@
 - отсутствует `gradle-wrapper.jar`, поэтому `./gradlew` не работает
 - конфигурация запуска и окружения не оформлена как воспроизводимая поставка
 
+Что уже улучшено в конфигурации:
+
+- базовый конфиг вынесен в `application.yml`
+- профили разнесены на `application-dev.yml`, `application-prod.yml`, `application-test.yml`
+- профиль `dev` используется по умолчанию
+- в `prod` Swagger UI и `/v3/api-docs` отключены
+
 ### 4. Тестовое покрытие практически отсутствует
 
 - в `src/test` только пустой smoke-test
@@ -322,6 +329,8 @@
 - advertisement controller tests green: сделано
 - exception handler: сделано
 - единый error-contract для advertisement/auth/security: сделано
+- application profiles `dev/prod/test`: сделано
+- Swagger отключен в `prod`: сделано
 
 ### Итерация 2
 
