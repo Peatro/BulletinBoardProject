@@ -44,6 +44,13 @@ public class AdvertisementControllerImpl implements AdvertisementController {
     }
 
     @Override
+    public ResponseEntity<List<AdvertisementResponse>> getCurrentUserAdvertisements(
+            @CurrentUser UUID userId
+    ) {
+        return ResponseEntity.ok(advertisementService.getAllAdvertisementsByUserId(userId));
+    }
+
+    @Override
     public ResponseEntity<AdvertisementResponse> updateAdvertisement(
             @PathVariable Long id,
             @RequestBody AdvertisementCreateRequest request,

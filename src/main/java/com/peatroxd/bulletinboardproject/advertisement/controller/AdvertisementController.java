@@ -61,6 +61,21 @@ public interface AdvertisementController {
     )
     ResponseEntity<List<AdvertisementResponse>> getAllAdvertisements();
 
+    @GetMapping("/me")
+    @Operation(summary = "Получить объявления текущего пользователя")
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Список объявлений текущего пользователя",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = AdvertisementResponse.class)))
+            ),
+            @ApiResponse(responseCode = "401", description = "Пользователь не аутентифицирован", content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    })
+    ResponseEntity<List<AdvertisementResponse>> getCurrentUserAdvertisements(
+            @Parameter(hidden = true)
+            @CurrentUser UUID userId
+    );
+
     @PutMapping("/{id}")
     @Operation(summary = "Обновить объявление", description = "Обновляет объявление, если оно принадлежит текущему пользователю")
     @ApiResponses({
