@@ -102,6 +102,24 @@ class AdvertisementControllerWebMvcTest {
     }
 
     @Test
+    void getCurrentUserAdvertisementsShouldReturnOnlyAuthenticatedUserItems() throws Exception {
+        UUID userId = UUID.randomUUID();
+        setCurrentJwtUser(userId);
+
+        when(advertisementService.getAllAdvertisementsByUserId(userId)).thenReturn(List.of(
+                AdvertisementResponse.builder().id(10L).title("My first").build(),
+                AdvertisementResponse.builder().id(11L).title("My second").build()
+        ));
+
+        mockMvc.perform(get("/advertisements/me"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(10L))
+                .andExpect(jsonPath("$[1].title").value("My second"));
+
+        verify(advertisementService).getAllAdvertisementsByUserId(userId);
+    }
+
+    @Test
     void createAdvertisementShouldReturnCreated() throws Exception {
         UUID userId = UUID.randomUUID();
         setCurrentJwtUser(userId);
