@@ -3,6 +3,7 @@ package com.peatroxd.bulletinboardproject.user.service.impl;
 import com.peatroxd.bulletinboardproject.common.enums.NotFoundExceptionMessage;
 import com.peatroxd.bulletinboardproject.common.exception.ResourceNotFoundException;
 import com.peatroxd.bulletinboardproject.security.Role;
+import com.peatroxd.bulletinboardproject.user.dto.request.UserUpdateRequest;
 import com.peatroxd.bulletinboardproject.user.dto.response.UserResponse;
 import com.peatroxd.bulletinboardproject.user.entity.User;
 import com.peatroxd.bulletinboardproject.user.repository.UserRepository;
@@ -28,6 +29,15 @@ public class UserServiceImpl implements UserService {
 
     public UserResponse getCurrentUser(UUID keycloakUserId) {
         return UserResponse.from(findByKeycloakUserIdOrThrow(keycloakUserId));
+    }
+
+    public UserResponse updateCurrentUser(UUID keycloakUserId, UserUpdateRequest request) {
+        User existing = findByKeycloakUserIdOrThrow(keycloakUserId);
+        existing.setEmail(request.email());
+        existing.setFirstName(request.firstName());
+        existing.setLastName(request.lastName());
+        existing.setPhone(request.phone());
+        return UserResponse.from(userRepository.save(existing));
     }
 
     public User updateUser(UUID id, User user, Role role) {

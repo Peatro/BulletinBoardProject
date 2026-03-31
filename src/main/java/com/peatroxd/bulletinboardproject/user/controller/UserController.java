@@ -2,6 +2,7 @@ package com.peatroxd.bulletinboardproject.user.controller;
 
 import com.peatroxd.bulletinboardproject.security.Role;
 import com.peatroxd.bulletinboardproject.security.annotation.CurrentUser;
+import com.peatroxd.bulletinboardproject.user.dto.request.UserUpdateRequest;
 import com.peatroxd.bulletinboardproject.user.dto.response.UserResponse;
 import com.peatroxd.bulletinboardproject.user.entity.User;
 
@@ -10,6 +11,8 @@ import java.util.UUID;
 public interface UserController {
 
     UserResponse getCurrentUser(@CurrentUser UUID keycloakUserId);
+
+    UserResponse updateCurrentUser(@CurrentUser UUID keycloakUserId, UserUpdateRequest request);
 
     User getUserById(UUID id);
 
