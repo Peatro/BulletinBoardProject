@@ -5,6 +5,7 @@ import com.peatroxd.bulletinboardproject.auth.dto.request.AuthRegisterRequest;
 import com.peatroxd.bulletinboardproject.auth.dto.response.AuthRegisterResponse;
 import com.peatroxd.bulletinboardproject.auth.dto.response.AuthTokenResponse;
 import com.peatroxd.bulletinboardproject.auth.service.AuthService;
+import com.peatroxd.bulletinboardproject.common.exception.GlobalExceptionHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -52,7 +53,9 @@ class AuthControllerWebMvcTest {
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(authController).build();
+        mockMvc = MockMvcBuilders.standaloneSetup(authController)
+                .setControllerAdvice(new GlobalExceptionHandler())
+                .build();
     }
 
     @Test
@@ -87,6 +90,21 @@ class AuthControllerWebMvcTest {
                 .andExpect(jsonPath("$.token_type").value("Bearer"));
 
         verify(authService).login(request);
+    }
+
+    @Test
+    void loginShouldReturn400WhenCredentialsAreInvalid() throws Exception {
+        AuthLoginRequest request = loginRequest();
+
+        when(authService.login(request)).thenThrow(new IllegalArgumentException("Invalid username or password"));
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(LOGIN_REQUEST_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("Invalid username or password"));
     }
 
     private AuthRegisterRequest registerRequest() {

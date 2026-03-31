@@ -1,5 +1,6 @@
 package com.peatroxd.bulletinboardproject.security.service;
 
+import com.peatroxd.bulletinboardproject.common.exception.UnauthorizedException;
 import com.peatroxd.bulletinboardproject.security.annotation.CurrentUser;
 import org.springframework.core.MethodParameter;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -30,7 +31,7 @@ public class CurrentUserArgumentResolver implements HandlerMethodArgumentResolve
                 .getPrincipal();
 
         if (!(principal instanceof Jwt jwt)) {
-            throw new RuntimeException("No JWT found");
+            throw new UnauthorizedException("No JWT found");
         }
 
         return UUID.fromString(jwt.getSubject());

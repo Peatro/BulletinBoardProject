@@ -1,5 +1,6 @@
 package com.peatroxd.bulletinboardproject.security.service;
 
+import com.peatroxd.bulletinboardproject.common.exception.UnauthorizedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
@@ -25,7 +26,7 @@ public class CurrentUserService {
                 .getPrincipal();
 
         if (!(principal instanceof Jwt jwt)) {
-            throw new RuntimeException("No JWT found in security context");
+            throw new UnauthorizedException("No JWT found in security context");
         }
 
         return jwt;

@@ -10,6 +10,8 @@ import com.peatroxd.bulletinboardproject.advertisement.repository.AdvertisementR
 import com.peatroxd.bulletinboardproject.advertisement.service.impl.AdvertisementServiceImpl;
 import com.peatroxd.bulletinboardproject.category.enitty.Category;
 import com.peatroxd.bulletinboardproject.category.facade.CategoryFacade;
+import com.peatroxd.bulletinboardproject.common.exception.BadRequestException;
+import com.peatroxd.bulletinboardproject.common.exception.ForbiddenOperationException;
 import com.peatroxd.bulletinboardproject.common.exception.ResourceNotFoundException;
 import com.peatroxd.bulletinboardproject.user.entity.User;
 import com.peatroxd.bulletinboardproject.user.facade.UserFacade;
@@ -131,13 +133,73 @@ class AdvertisementServiceImplTest {
     }
 
     @Test
-    void deleteAdvertisementShouldDeleteFoundEntity() {
-        Advertisement advertisement = Advertisement.builder().id(ADVERTISEMENT_ID).build();
+    void deleteAdvertisementShouldDeleteOwnedEntity() {
+        Advertisement advertisement = advertisement(AdvertisementStatus.DRAFT, author(USER_ID));
         when(advertisementRepository.findById(ADVERTISEMENT_ID)).thenReturn(Optional.of(advertisement));
 
-        advertisementService.deleteAdvertisement(ADVERTISEMENT_ID);
+        advertisementService.deleteAdvertisement(ADVERTISEMENT_ID, USER_ID);
 
         verify(advertisementRepository).delete(advertisement);
+    }
+
+    @Test
+    void deleteAdvertisementShouldRejectForeignOwner() {
+        Advertisement advertisement = advertisement(AdvertisementStatus.DRAFT, author(UUID.randomUUID()));
+        when(advertisementRepository.findById(ADVERTISEMENT_ID)).thenReturn(Optional.of(advertisement));
+
+        assertThatThrownBy(() -> advertisementService.deleteAdvertisement(ADVERTISEMENT_ID, USER_ID))
+                .isInstanceOf(ForbiddenOperationException.class)
+                .hasMessage("Forbidden");
+
+        verify(advertisementRepository, never()).delete(any());
+    }
+
+    @Test
+    void updateAdvertisementShouldOverwriteEditableFieldsAndCategory() {
+        AdvertisementCreateRequest request = new AdvertisementCreateRequest(
+                "Updated title",
+                "Updated description",
+                BigDecimal.valueOf(2000),
+                CATEGORY_ID,
+                AdvertisementType.BUY
+        );
+        Category category = category();
+        Advertisement advertisement = advertisement(AdvertisementStatus.DRAFT, author(USER_ID));
+        AdvertisementResponse response = AdvertisementResponse.builder()
+                .id(ADVERTISEMENT_ID)
+                .title("Updated title")
+                .type(AdvertisementType.BUY)
+                .categoryId(CATEGORY_ID)
+                .build();
+
+        when(advertisementRepository.findById(ADVERTISEMENT_ID)).thenReturn(Optional.of(advertisement));
+        when(categoryFacade.getById(CATEGORY_ID)).thenReturn(category);
+        when(advertisementRepository.save(advertisement)).thenReturn(advertisement);
+        when(advertisementMapper.toResponse(advertisement)).thenReturn(response);
+
+        AdvertisementResponse actual = advertisementService.updateAdvertisement(ADVERTISEMENT_ID, request, USER_ID);
+
+        assertThat(actual).isEqualTo(response);
+        assertThat(advertisement.getTitle()).isEqualTo("Updated title");
+        assertThat(advertisement.getDescription()).isEqualTo("Updated description");
+        assertThat(advertisement.getPrice()).isEqualByComparingTo("2000");
+        assertThat(advertisement.getType()).isEqualTo(AdvertisementType.BUY);
+        assertThat(advertisement.getCategory()).isEqualTo(category);
+        assertThat(advertisement.getUpdatedAt()).isNotNull();
+    }
+
+    @Test
+    void updateAdvertisementShouldRejectForeignOwner() {
+        AdvertisementCreateRequest request = createRequest();
+        Advertisement advertisement = advertisement(AdvertisementStatus.DRAFT, author(UUID.randomUUID()));
+
+        when(advertisementRepository.findById(ADVERTISEMENT_ID)).thenReturn(Optional.of(advertisement));
+
+        assertThatThrownBy(() -> advertisementService.updateAdvertisement(ADVERTISEMENT_ID, request, USER_ID))
+                .isInstanceOf(ForbiddenOperationException.class)
+                .hasMessage("Forbidden");
+
+        verify(advertisementRepository, never()).save(any());
     }
 
     @Test
@@ -175,7 +237,7 @@ class AdvertisementServiceImplTest {
         when(advertisementRepository.findById(ADVERTISEMENT_ID)).thenReturn(Optional.of(advertisement));
 
         assertThatThrownBy(() -> advertisementService.publishAdvertisement(ADVERTISEMENT_ID, USER_ID))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(ForbiddenOperationException.class)
                 .hasMessage("Forbidden");
 
         verify(advertisementRepository, never()).save(any());
@@ -188,7 +250,7 @@ class AdvertisementServiceImplTest {
         when(advertisementRepository.findById(ADVERTISEMENT_ID)).thenReturn(Optional.of(advertisement));
 
         assertThatThrownBy(() -> advertisementService.publishAdvertisement(ADVERTISEMENT_ID, USER_ID))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(BadRequestException.class)
                 .hasMessage("Only DRAFT can be published");
 
         verify(advertisementRepository, never()).save(any());

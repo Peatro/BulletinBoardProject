@@ -50,7 +50,7 @@ dependencies {
 	annotationProcessor("org.projectlombok:lombok")
 
 	// --- OpenAPI ---
-	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
+	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.0")
 
 	// --- Test ---
 	testImplementation(platform("org.testcontainers:testcontainers-bom:1.20.4"))

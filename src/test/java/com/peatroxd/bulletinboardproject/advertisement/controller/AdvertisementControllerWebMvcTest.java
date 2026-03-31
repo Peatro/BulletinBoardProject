@@ -6,6 +6,10 @@ import com.peatroxd.bulletinboardproject.advertisement.dto.response.Advertisemen
 import com.peatroxd.bulletinboardproject.advertisement.enums.AdvertisementStatus;
 import com.peatroxd.bulletinboardproject.advertisement.enums.AdvertisementType;
 import com.peatroxd.bulletinboardproject.advertisement.service.AdvertisementService;
+import com.peatroxd.bulletinboardproject.common.exception.BadRequestException;
+import com.peatroxd.bulletinboardproject.common.exception.ForbiddenOperationException;
+import com.peatroxd.bulletinboardproject.common.exception.GlobalExceptionHandler;
+import com.peatroxd.bulletinboardproject.common.exception.ResourceNotFoundException;
 import com.peatroxd.bulletinboardproject.security.service.CurrentUserArgumentResolver;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,6 +29,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -72,6 +77,7 @@ class AdvertisementControllerWebMvcTest {
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(advertisementController)
                 .setCustomArgumentResolvers(new CurrentUserArgumentResolver())
+                .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
     }
 
@@ -117,19 +123,40 @@ class AdvertisementControllerWebMvcTest {
 
     @Test
     void updateAdvertisementShouldBeAvailableViaPutWithId() throws Exception {
+        UUID userId = UUID.randomUUID();
+        setCurrentJwtUser(userId);
+        AdvertisementCreateRequest request = new AdvertisementCreateRequest(
+                "Updated title",
+                "Updated description",
+                BigDecimal.valueOf(2000),
+                CATEGORY_ID,
+                AdvertisementType.SELL
+        );
+        AdvertisementResponse response = AdvertisementResponse.builder()
+                .id(ADVERTISEMENT_ID)
+                .title("Updated title")
+                .build();
+
+        when(advertisementService.updateAdvertisement(ADVERTISEMENT_ID, request, userId)).thenReturn(response);
+
         mockMvc.perform(put("/advertisements/{id}", ADVERTISEMENT_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(UPDATE_REQUEST_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(ADVERTISEMENT_ID));
+
+        verify(advertisementService).updateAdvertisement(ADVERTISEMENT_ID, request, userId);
     }
 
     @Test
     void deleteAdvertisementShouldBeAvailableViaDeleteWithId() throws Exception {
+        UUID userId = UUID.randomUUID();
+        setCurrentJwtUser(userId);
+
         mockMvc.perform(delete("/advertisements/{id}", ADVERTISEMENT_ID))
                 .andExpect(status().isNoContent());
 
-        verify(advertisementService).deleteAdvertisement(ADVERTISEMENT_ID);
+        verify(advertisementService).deleteAdvertisement(ADVERTISEMENT_ID, userId);
     }
 
     @Test
@@ -145,6 +172,48 @@ class AdvertisementControllerWebMvcTest {
                 .andExpect(jsonPath("$.status").value("PUBLISHED"));
 
         verify(advertisementService).publishAdvertisement(ADVERTISEMENT_ID, userId);
+    }
+
+    @Test
+    void getAdvertisementByIdShouldReturn404WhenAdvertisementIsMissing() throws Exception {
+        when(advertisementService.getAdvertisementById(ADVERTISEMENT_ID))
+                .thenThrow(new ResourceNotFoundException("Advertisement not found."));
+
+        mockMvc.perform(get("/advertisements/{id}", ADVERTISEMENT_ID))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.error").value("Not Found"))
+                .andExpect(jsonPath("$.message").value("Advertisement not found."));
+    }
+
+    @Test
+    void deleteAdvertisementShouldReturn403WhenCurrentUserIsNotOwner() throws Exception {
+        UUID userId = UUID.randomUUID();
+        setCurrentJwtUser(userId);
+
+        doThrow(new ForbiddenOperationException("Forbidden"))
+                .when(advertisementService).deleteAdvertisement(ADVERTISEMENT_ID, userId);
+
+        mockMvc.perform(delete("/advertisements/{id}", ADVERTISEMENT_ID))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403))
+                .andExpect(jsonPath("$.error").value("Forbidden"))
+                .andExpect(jsonPath("$.message").value("Forbidden"));
+    }
+
+    @Test
+    void publishAdvertisementShouldReturn400WhenAdvertisementStatusIsInvalid() throws Exception {
+        UUID userId = UUID.randomUUID();
+        setCurrentJwtUser(userId);
+
+        when(advertisementService.publishAdvertisement(ADVERTISEMENT_ID, userId))
+                .thenThrow(new BadRequestException("Only DRAFT can be published"));
+
+        mockMvc.perform(patch("/advertisements/{id}", ADVERTISEMENT_ID))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("Only DRAFT can be published"));
     }
 
     private void setCurrentJwtUser(UUID userId) {
