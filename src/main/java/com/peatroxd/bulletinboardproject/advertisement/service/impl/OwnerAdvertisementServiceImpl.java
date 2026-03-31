@@ -6,7 +6,7 @@ import com.peatroxd.bulletinboardproject.advertisement.entity.Advertisement;
 import com.peatroxd.bulletinboardproject.advertisement.enums.AdvertisementStatus;
 import com.peatroxd.bulletinboardproject.advertisement.mapper.AdvertisementMapper;
 import com.peatroxd.bulletinboardproject.advertisement.repository.AdvertisementRepository;
-import com.peatroxd.bulletinboardproject.advertisement.service.AdvertisementService;
+import com.peatroxd.bulletinboardproject.advertisement.service.OwnerAdvertisementService;
 import com.peatroxd.bulletinboardproject.category.enitty.Category;
 import com.peatroxd.bulletinboardproject.category.facade.CategoryFacade;
 import com.peatroxd.bulletinboardproject.common.enums.NotFoundExceptionMessage;
@@ -25,7 +25,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class AdvertisementServiceImpl implements AdvertisementService {
+public class OwnerAdvertisementServiceImpl implements OwnerAdvertisementService {
 
     private final AdvertisementRepository advertisementRepository;
     private final CategoryFacade categoryFacade;
@@ -46,31 +46,11 @@ public class AdvertisementServiceImpl implements AdvertisementService {
     }
 
     @Override
-    public List<AdvertisementResponse> getAllAdvertisements(Long categoryId, AdvertisementStatus status, UUID authorId) {
-        AdvertisementStatus effectiveStatus = status == null ? AdvertisementStatus.PUBLISHED : status;
-        validatePublicStatusFilter(effectiveStatus);
-
-        return advertisementRepository.findAllByPublicFilters(effectiveStatus, categoryId, authorId)
-                .stream()
-                .map(advertisementMapper::toResponse)
-                .toList();
-    }
-
-    @Override
     public List<AdvertisementResponse> getAllAdvertisementsByUserId(UUID userId) {
         return advertisementRepository.findAllByAuthor_KeycloakUserId(userId)
                 .stream()
                 .map(advertisementMapper::toResponse)
                 .toList();
-    }
-
-    @Override
-    public AdvertisementResponse getAdvertisementById(Long id) {
-        Advertisement advertisement = advertisementRepository.findByIdAndStatus(id, AdvertisementStatus.PUBLISHED)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        NotFoundExceptionMessage.ADVERTISEMENT_NOT_FOUND.getMessage()
-                ));
-        return advertisementMapper.toResponse(advertisement);
     }
 
     @Override
@@ -131,8 +111,6 @@ public class AdvertisementServiceImpl implements AdvertisementService {
         advertisement.setStatus(AdvertisementStatus.DRAFT);
         advertisement.setCreatedAt(now);
         advertisement.setUpdatedAt(now);
-
-        // TODO ДОБАВИТЬ ПРИВЯЗКУ ИЗОБРАЖЕНИЙ
     }
 
     private void validateOwnership(Advertisement advertisement, UUID userId) {
@@ -144,12 +122,6 @@ public class AdvertisementServiceImpl implements AdvertisementService {
     private void validatePublishAllowed(Advertisement advertisement) {
         if (advertisement.getStatus() != AdvertisementStatus.DRAFT) {
             throw new BadRequestException("Only DRAFT can be published");
-        }
-    }
-
-    private void validatePublicStatusFilter(AdvertisementStatus status) {
-        if (status != AdvertisementStatus.PUBLISHED) {
-            throw new BadRequestException("Public list supports only PUBLISHED status");
         }
     }
 }

@@ -2,8 +2,11 @@ package com.peatroxd.bulletinboardproject.advertisement.controller.impl;
 
 import com.peatroxd.bulletinboardproject.advertisement.controller.AdvertisementController;
 import com.peatroxd.bulletinboardproject.advertisement.dto.request.AdvertisementCreateRequest;
+import com.peatroxd.bulletinboardproject.advertisement.dto.request.PublicAdvertisementFilter;
 import com.peatroxd.bulletinboardproject.advertisement.dto.response.AdvertisementResponse;
-import com.peatroxd.bulletinboardproject.advertisement.service.AdvertisementService;
+import com.peatroxd.bulletinboardproject.advertisement.enums.AdvertisementStatus;
+import com.peatroxd.bulletinboardproject.advertisement.service.OwnerAdvertisementService;
+import com.peatroxd.bulletinboardproject.advertisement.service.PublicAdvertisementQueryService;
 import com.peatroxd.bulletinboardproject.security.annotation.CurrentUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +23,8 @@ import java.util.UUID;
 @RequestMapping("/advertisements")
 public class AdvertisementControllerImpl implements AdvertisementController {
 
-    private final AdvertisementService advertisementService;
+    private final PublicAdvertisementQueryService publicAdvertisementQueryService;
+    private final OwnerAdvertisementService ownerAdvertisementService;
 
     @Override
     public ResponseEntity<AdvertisementResponse> createAdvertisement(
@@ -28,30 +32,32 @@ public class AdvertisementControllerImpl implements AdvertisementController {
             @CurrentUser UUID userId
     ) {
         return ResponseEntity.status(201)
-                .body(advertisementService.createAdvertisement(request, userId));
+                .body(ownerAdvertisementService.createAdvertisement(request, userId));
     }
 
     @Override
     public ResponseEntity<AdvertisementResponse> getAdvertisementById(
             @PathVariable Long id
     ) {
-        return ResponseEntity.ok(advertisementService.getAdvertisementById(id));
+        return ResponseEntity.ok(publicAdvertisementQueryService.getAdvertisementById(id));
     }
 
     @Override
     public ResponseEntity<List<AdvertisementResponse>> getAllAdvertisements(
             Long categoryId,
-            com.peatroxd.bulletinboardproject.advertisement.enums.AdvertisementStatus status,
+            AdvertisementStatus status,
             UUID authorId
     ) {
-        return ResponseEntity.ok(advertisementService.getAllAdvertisements(categoryId, status, authorId));
+        return ResponseEntity.ok(publicAdvertisementQueryService.getAllAdvertisements(
+                new PublicAdvertisementFilter(categoryId, status, authorId)
+        ));
     }
 
     @Override
     public ResponseEntity<List<AdvertisementResponse>> getCurrentUserAdvertisements(
             @CurrentUser UUID userId
     ) {
-        return ResponseEntity.ok(advertisementService.getAllAdvertisementsByUserId(userId));
+        return ResponseEntity.ok(ownerAdvertisementService.getAllAdvertisementsByUserId(userId));
     }
 
     @Override
@@ -60,7 +66,7 @@ public class AdvertisementControllerImpl implements AdvertisementController {
             @RequestBody AdvertisementCreateRequest request,
             @CurrentUser UUID userId
     ) {
-        return ResponseEntity.ok(advertisementService.updateAdvertisement(id, request, userId));
+        return ResponseEntity.ok(ownerAdvertisementService.updateAdvertisement(id, request, userId));
     }
 
     @Override
@@ -68,7 +74,7 @@ public class AdvertisementControllerImpl implements AdvertisementController {
             @PathVariable Long id,
             @CurrentUser UUID userId
     ) {
-        advertisementService.deleteAdvertisement(id, userId);
+        ownerAdvertisementService.deleteAdvertisement(id, userId);
         return ResponseEntity.status(204).build();
     }
 
@@ -77,6 +83,6 @@ public class AdvertisementControllerImpl implements AdvertisementController {
             @PathVariable Long id,
             @CurrentUser UUID userId
     ) {
-        return ResponseEntity.ok(advertisementService.publishAdvertisement(id, userId));
+        return ResponseEntity.ok(ownerAdvertisementService.publishAdvertisement(id, userId));
     }
 }
