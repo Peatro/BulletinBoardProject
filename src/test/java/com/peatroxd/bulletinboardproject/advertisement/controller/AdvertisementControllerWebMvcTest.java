@@ -88,7 +88,7 @@ class AdvertisementControllerWebMvcTest {
 
     @Test
     void getAllAdvertisementsShouldReturnOk() throws Exception {
-        when(advertisementService.getAllAdvertisements()).thenReturn(List.of(
+        when(advertisementService.getAllAdvertisements(null, null, null)).thenReturn(List.of(
                 AdvertisementResponse.builder().id(1L).title("First").build(),
                 AdvertisementResponse.builder().id(2L).title("Second").build()
         ));
@@ -98,7 +98,24 @@ class AdvertisementControllerWebMvcTest {
                 .andExpect(jsonPath("$[0].id").value(1L))
                 .andExpect(jsonPath("$[1].title").value("Second"));
 
-        verify(advertisementService).getAllAdvertisements();
+        verify(advertisementService).getAllAdvertisements(null, null, null);
+    }
+
+    @Test
+    void getAllAdvertisementsShouldPassFiltersToService() throws Exception {
+        UUID authorId = UUID.randomUUID();
+
+        when(advertisementService.getAllAdvertisements(CATEGORY_ID, AdvertisementStatus.PUBLISHED, authorId))
+                .thenReturn(List.of(AdvertisementResponse.builder().id(1L).build()));
+
+        mockMvc.perform(get("/advertisements")
+                        .param("categoryId", CATEGORY_ID.toString())
+                        .param("status", "PUBLISHED")
+                        .param("authorId", authorId.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(1L));
+
+        verify(advertisementService).getAllAdvertisements(CATEGORY_ID, AdvertisementStatus.PUBLISHED, authorId);
     }
 
     @Test

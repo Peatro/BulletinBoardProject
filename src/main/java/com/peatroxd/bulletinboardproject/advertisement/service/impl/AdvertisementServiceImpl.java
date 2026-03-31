@@ -46,8 +46,11 @@ public class AdvertisementServiceImpl implements AdvertisementService {
     }
 
     @Override
-    public List<AdvertisementResponse> getAllAdvertisements() {
-        return advertisementRepository.findAll()
+    public List<AdvertisementResponse> getAllAdvertisements(Long categoryId, AdvertisementStatus status, UUID authorId) {
+        AdvertisementStatus effectiveStatus = status == null ? AdvertisementStatus.PUBLISHED : status;
+        validatePublicStatusFilter(effectiveStatus);
+
+        return advertisementRepository.findAllByPublicFilters(effectiveStatus, categoryId, authorId)
                 .stream()
                 .map(advertisementMapper::toResponse)
                 .toList();
@@ -63,7 +66,10 @@ public class AdvertisementServiceImpl implements AdvertisementService {
 
     @Override
     public AdvertisementResponse getAdvertisementById(Long id) {
-        Advertisement advertisement = findByIdOrThrow(id);
+        Advertisement advertisement = advertisementRepository.findByIdAndStatus(id, AdvertisementStatus.PUBLISHED)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        NotFoundExceptionMessage.ADVERTISEMENT_NOT_FOUND.getMessage()
+                ));
         return advertisementMapper.toResponse(advertisement);
     }
 
@@ -138,6 +144,12 @@ public class AdvertisementServiceImpl implements AdvertisementService {
     private void validatePublishAllowed(Advertisement advertisement) {
         if (advertisement.getStatus() != AdvertisementStatus.DRAFT) {
             throw new BadRequestException("Only DRAFT can be published");
+        }
+    }
+
+    private void validatePublicStatusFilter(AdvertisementStatus status) {
+        if (status != AdvertisementStatus.PUBLISHED) {
+            throw new BadRequestException("Public list supports only PUBLISHED status");
         }
     }
 }

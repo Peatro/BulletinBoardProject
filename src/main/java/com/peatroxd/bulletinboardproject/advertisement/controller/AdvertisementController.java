@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -59,7 +60,11 @@ public interface AdvertisementController {
             description = "Список объявлений",
             content = @Content(array = @ArraySchema(schema = @Schema(implementation = AdvertisementResponse.class)))
     )
-    ResponseEntity<List<AdvertisementResponse>> getAllAdvertisements();
+    ResponseEntity<List<AdvertisementResponse>> getAllAdvertisements(
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) com.peatroxd.bulletinboardproject.advertisement.enums.AdvertisementStatus status,
+            @RequestParam(required = false) UUID authorId
+    );
 
     @GetMapping("/me")
     @Operation(summary = "Получить объявления текущего пользователя")
