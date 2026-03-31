@@ -1,6 +1,7 @@
 package com.peatroxd.bulletinboardproject.user.service;
 
 import com.peatroxd.bulletinboardproject.security.Role;
+import com.peatroxd.bulletinboardproject.user.dto.response.UserResponse;
 import com.peatroxd.bulletinboardproject.user.entity.User;
 
 import java.util.UUID;
@@ -10,6 +11,8 @@ public interface UserService {
     User createLocalUser(User user);
 
     User getUser(UUID id);
+
+    UserResponse getCurrentUser(UUID keycloakUserId);
 
     User updateUser(UUID id, User user, Role role);
 
