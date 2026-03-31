@@ -1,0 +1,36 @@
+{
+  "realm": "board-realm",
+  "enabled": true,
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "roles": {
+    "realm": [
+      {
+        "name": "USER"
+      },
+      {
+        "name": "ADMIN"
+      },
+      {
+        "name": "VIEWER"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "board-backend",
+      "name": "board-backend",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "Qd5eK8Yy4YgwHtkRaZ4sOtra4m7eK6JI",
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect",
+      "redirectUris": [],
+      "webOrigins": []
+    }
+  ]
+}
