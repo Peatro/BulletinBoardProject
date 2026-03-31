@@ -357,3 +357,72 @@ MVP можно считать готовым, если:
 - категории доступны клиенту
 - критический сценарий покрыт базовыми тестами
 - запуск и проверка описаны в документации
+## Status Update 2026-03-31
+
+Что закрыто с прошлого обновления плана:
+
+- advertisement API доведен до рабочего MVP-контура: `update`, `delete`, `publish`, ownership-checks, `GET /advertisements/me`
+- добавлен единый error-contract через `@ControllerAdvice`
+- добавлены `GET /api/users/me` и `PUT /api/users/me`
+- добавлен публичный `GET /api/categories`
+- категории получили seed-данные через отдельный Liquibase changeset
+- выдача категорий отсортирована в иерархическом порядке
+- Swagger описан для основных контроллеров и DTO
+- конфигурация разнесена на `dev`, `prod`, `test`
+- в `prod` отключены Swagger UI и `/v3/api-docs`
+- `gradle test` проходит полностью
+
+Что еще не закрыто до MVP:
+
+- `Dockerfile` все еще заглушка и не собирает приложение
+- отсутствует `gradle/wrapper/gradle-wrapper.jar`, то есть wrapper неполный
+- нет repository tests
+- нет integration tests с Testcontainers
+- нет фильтрации публичного списка объявлений по статусу/категории/автору
+- admin user endpoints все еще отдают `User` entity напрямую
+- `comments` и `images` по-прежнему вне завершенного use case
+
+Текущий фактический приоритет:
+
+1. Закрыть инфраструктурный минимум: нормальный `Dockerfile` и полный Gradle wrapper.
+2. Довести advertisement list до MVP-логики: публично показывать только `PUBLISHED`, добавить базовые фильтры.
+3. Добавить repository/integration tests для проверки миграций и критического happy-path.
+## Refactor Backlog 2026-03-31
+
+Уже закрыто после предыдущего обновления:
+
+- рабочий `Dockerfile`, `README` и полный Gradle wrapper
+- публичный advertisement list ограничен `PUBLISHED` и получил базовые фильтры
+- добавлены repository tests и integration smoke-test с Testcontainers
+- admin user API переведен на DTO и больше не отдает `User` entity напрямую
+
+P1 до MVP:
+
+1. Рефактор `auth` и `Keycloak` integration:
+- вынести общий инфраструктурный слой для Keycloak URL/token logic
+- убрать дублирование между `KeycloakAdminClient` и `KeycloakAuthClient`
+- заменить silent rollback в регистрации на явную compensation policy
+
+2. Разделить public и owner use cases объявлений:
+- вынести public query flow отдельно от owner command flow
+- убрать смешение access policy в одном service class
+
+3. Убрать ручной update mapping из сервисов:
+- вынести field-by-field update logic в mapper/helper слой
+- оставить в сервисах orchestration и business rules
+
+4. Привести `CurrentUserArgumentResolver` к normal DI:
+- перестать создавать resolver через `new`
+- зарегистрировать его как bean и внедрять через config
+
+P2 после MVP:
+
+- решить судьбу facade-слоя: убрать thin facades или усилить их до orchestration layer
+- пересобрать category read model под явный контракт: flat list или tree
+- выровнять OpenAPI security contract для public endpoints
+
+P3 технический долг:
+
+- исправить package typo `category.enitty`
+- убрать mojibake в Swagger и документации
+- дочистить naming consistency и мелкие дубли

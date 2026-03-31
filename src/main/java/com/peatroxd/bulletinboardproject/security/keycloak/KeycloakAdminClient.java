@@ -1,16 +1,12 @@
 package com.peatroxd.bulletinboardproject.security.keycloak;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.peatroxd.bulletinboardproject.security.Role;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
@@ -22,11 +18,21 @@ import java.util.Map;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
 public class KeycloakAdminClient {
 
-    private final KeycloakAdminProperties properties;
+    private final KeycloakEndpointFactory endpointFactory;
+    private final KeycloakAdminTokenProvider adminTokenProvider;
     private final RestTemplate restTemplate;
+
+    public KeycloakAdminClient(
+            KeycloakEndpointFactory endpointFactory,
+            KeycloakAdminTokenProvider adminTokenProvider,
+            RestTemplate restTemplate
+    ) {
+        this.endpointFactory = endpointFactory;
+        this.adminTokenProvider = adminTokenProvider;
+        this.restTemplate = restTemplate;
+    }
 
     public UUID createUser(
             String username,
@@ -37,17 +43,16 @@ public class KeycloakAdminClient {
             String password,
             Role role
     ) {
-        String token = getAccessToken();
+        String token = adminTokenProvider.getAccessToken();
         UUID userId = createKeycloakUser(username, email, firstName, lastName, phone, password, token);
         assignRealmRole(userId, role.name(), token);
         return userId;
     }
 
     public void deleteUser(UUID userId) {
-        String url = normalizeBaseUrl() + "/admin/realms/" + requireRealm() + "/users/" + userId;
-        HttpHeaders headers = bearerHeaders(getAccessToken());
+        HttpHeaders headers = bearerHeaders(adminTokenProvider.getAccessToken());
         restTemplate.exchange(
-                url,
+                endpointFactory.userUrl(userId),
                 HttpMethod.DELETE,
                 new HttpEntity<>(headers),
                 Void.class
@@ -63,8 +68,6 @@ public class KeycloakAdminClient {
             String password,
             String token
     ) {
-        String url = normalizeBaseUrl() + "/admin/realms/" + requireRealm() + "/users";
-
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("username", username);
         payload.put("firstName", firstName);
@@ -93,7 +96,7 @@ public class KeycloakAdminClient {
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         ResponseEntity<Void> response = restTemplate.exchange(
-                url,
+                endpointFactory.usersUrl(),
                 HttpMethod.POST,
                 new HttpEntity<>(payload, headers),
                 Void.class
@@ -123,16 +126,11 @@ public class KeycloakAdminClient {
                 )
         );
 
-        String url = normalizeBaseUrl()
-                + "/admin/realms/" + requireRealm()
-                + "/users/" + userId
-                + "/role-mappings/realm";
-
         HttpHeaders headers = bearerHeaders(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         restTemplate.exchange(
-                url,
+                endpointFactory.userRealmRoleMappingsUrl(userId),
                 HttpMethod.POST,
                 new HttpEntity<>(roles, headers),
                 Void.class
@@ -140,9 +138,8 @@ public class KeycloakAdminClient {
     }
 
     private Map<String, Object> getRealmRole(String roleName, String token) {
-        String url = normalizeBaseUrl() + "/admin/realms/" + requireRealm() + "/roles/" + roleName;
         ResponseEntity<Map> response = restTemplate.exchange(
-                url,
+                endpointFactory.realmRoleUrl(roleName),
                 HttpMethod.GET,
                 new HttpEntity<>(bearerHeaders(token)),
                 Map.class
@@ -154,83 +151,10 @@ public class KeycloakAdminClient {
         return body;
     }
 
-    private String getAccessToken() {
-        String tokenUrl = normalizeBaseUrl()
-                + "/realms/" + requireTokenRealm()
-                + "/protocol/openid-connect/token";
-
-        MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
-        String clientId = requireClientId();
-
-        form.add("client_id", clientId);
-
-        if (StringUtils.hasText(properties.clientSecret())) {
-            form.add("grant_type", "client_credentials");
-            form.add("client_secret", properties.clientSecret());
-        } else if (StringUtils.hasText(properties.username()) && StringUtils.hasText(properties.password())) {
-            form.add("grant_type", "password");
-            form.add("username", properties.username());
-            form.add("password", properties.password());
-        } else {
-            throw new IllegalStateException("Keycloak admin credentials are not configured");
-        }
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
-        ResponseEntity<TokenResponse> response = restTemplate.exchange(
-                tokenUrl,
-                HttpMethod.POST,
-                new HttpEntity<>(form, headers),
-                TokenResponse.class
-        );
-
-        TokenResponse body = response.getBody();
-        if (body == null || !StringUtils.hasText(body.accessToken())) {
-            throw new IllegalStateException("Keycloak access token is missing");
-        }
-
-        return body.accessToken();
-    }
-
     private HttpHeaders bearerHeaders(String token) {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         return headers;
-    }
-
-    private String normalizeBaseUrl() {
-        String baseUrl = properties.serverUrl();
-        if (!StringUtils.hasText(baseUrl)) {
-            throw new IllegalStateException("keycloak.admin.server-url is not set");
-        }
-        if (baseUrl.endsWith("/")) {
-            return baseUrl.substring(0, baseUrl.length() - 1);
-        }
-        return baseUrl;
-    }
-
-    private String requireRealm() {
-        String realm = properties.realm();
-        if (!StringUtils.hasText(realm)) {
-            throw new IllegalStateException("keycloak.admin.realm is not set");
-        }
-        return realm;
-    }
-
-    private String requireTokenRealm() {
-        if (StringUtils.hasText(properties.tokenRealm())) {
-            return properties.tokenRealm();
-        }
-        return requireRealm();
-    }
-
-    private String requireClientId() {
-        String clientId = properties.clientId();
-        if (!StringUtils.hasText(clientId)) {
-            throw new IllegalStateException("keycloak.admin.client-id is not set");
-        }
-        return clientId;
     }
 
     private static String extractIdFromLocation(URI location) {
@@ -240,8 +164,5 @@ public class KeycloakAdminClient {
             throw new IllegalStateException("Unexpected Keycloak Location header: " + value);
         }
         return value.substring(lastSlash + 1);
-    }
-
-    private record TokenResponse(@JsonProperty("access_token") String accessToken) {
     }
 }
