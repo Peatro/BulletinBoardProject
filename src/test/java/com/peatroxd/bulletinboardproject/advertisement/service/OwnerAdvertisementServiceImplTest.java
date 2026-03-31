@@ -7,12 +7,11 @@ import com.peatroxd.bulletinboardproject.advertisement.enums.AdvertisementStatus
 import com.peatroxd.bulletinboardproject.advertisement.enums.AdvertisementType;
 import com.peatroxd.bulletinboardproject.advertisement.mapper.AdvertisementMapper;
 import com.peatroxd.bulletinboardproject.advertisement.repository.AdvertisementRepository;
-import com.peatroxd.bulletinboardproject.advertisement.service.impl.AdvertisementServiceImpl;
+import com.peatroxd.bulletinboardproject.advertisement.service.impl.OwnerAdvertisementServiceImpl;
 import com.peatroxd.bulletinboardproject.category.enitty.Category;
 import com.peatroxd.bulletinboardproject.category.facade.CategoryFacade;
 import com.peatroxd.bulletinboardproject.common.exception.BadRequestException;
 import com.peatroxd.bulletinboardproject.common.exception.ForbiddenOperationException;
-import com.peatroxd.bulletinboardproject.common.exception.ResourceNotFoundException;
 import com.peatroxd.bulletinboardproject.user.entity.User;
 import com.peatroxd.bulletinboardproject.user.facade.UserFacade;
 import org.junit.jupiter.api.Test;
@@ -36,7 +35,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class AdvertisementServiceImplTest {
+class OwnerAdvertisementServiceImplTest {
 
     private static final UUID USER_ID = UUID.randomUUID();
     private static final Long ADVERTISEMENT_ID = 42L;
@@ -57,7 +56,7 @@ class AdvertisementServiceImplTest {
     private AdvertisementMapper advertisementMapper;
 
     @InjectMocks
-    private AdvertisementServiceImpl advertisementService;
+    private OwnerAdvertisementServiceImpl ownerAdvertisementService;
 
     @Test
     void createAdvertisementShouldPersistDraftWithAuthorAndCategory() {
@@ -92,7 +91,7 @@ class AdvertisementServiceImplTest {
         when(advertisementRepository.save(any(Advertisement.class))).thenReturn(savedEntity);
         when(advertisementMapper.toResponse(savedEntity)).thenReturn(response);
 
-        AdvertisementResponse actual = advertisementService.createAdvertisement(request, USER_ID);
+        AdvertisementResponse actual = ownerAdvertisementService.createAdvertisement(request, USER_ID);
 
         assertThat(actual).isEqualTo(response);
 
@@ -107,83 +106,6 @@ class AdvertisementServiceImplTest {
     }
 
     @Test
-    void getAdvertisementByIdShouldThrowWhenAdvertisementIsMissing() {
-        when(advertisementRepository.findByIdAndStatus(99L, AdvertisementStatus.PUBLISHED)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> advertisementService.getAdvertisementById(99L))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessage("Advertisement not found.");
-    }
-
-    @Test
-    void getAdvertisementByIdShouldReturnOnlyPublishedAdvertisement() {
-        Advertisement published = advertisement(AdvertisementStatus.PUBLISHED, author(USER_ID));
-        AdvertisementResponse response = AdvertisementResponse.builder()
-                .id(ADVERTISEMENT_ID)
-                .status(AdvertisementStatus.PUBLISHED)
-                .build();
-
-        when(advertisementRepository.findByIdAndStatus(ADVERTISEMENT_ID, AdvertisementStatus.PUBLISHED))
-                .thenReturn(Optional.of(published));
-        when(advertisementMapper.toResponse(published)).thenReturn(response);
-
-        AdvertisementResponse actual = advertisementService.getAdvertisementById(ADVERTISEMENT_ID);
-
-        assertThat(actual).isEqualTo(response);
-    }
-
-    @Test
-    void getAllAdvertisementsShouldReturnPublishedAdvertisementsByDefault() {
-        Advertisement published = advertisement(AdvertisementStatus.PUBLISHED, author(USER_ID));
-        AdvertisementResponse response = AdvertisementResponse.builder()
-                .id(ADVERTISEMENT_ID)
-                .status(AdvertisementStatus.PUBLISHED)
-                .build();
-
-        when(advertisementRepository.findAllByPublicFilters(AdvertisementStatus.PUBLISHED, null, null))
-                .thenReturn(List.of(published));
-        when(advertisementMapper.toResponse(published)).thenReturn(response);
-
-        List<AdvertisementResponse> actual = advertisementService.getAllAdvertisements(null, null, null);
-
-        assertThat(actual).containsExactly(response);
-    }
-
-    @Test
-    void getAllAdvertisementsShouldApplyProvidedFilters() {
-        Advertisement published = advertisement(AdvertisementStatus.PUBLISHED, author(USER_ID));
-        AdvertisementResponse response = AdvertisementResponse.builder()
-                .id(ADVERTISEMENT_ID)
-                .categoryId(CATEGORY_ID)
-                .authorId(USER_ID)
-                .status(AdvertisementStatus.PUBLISHED)
-                .build();
-
-        when(advertisementRepository.findAllByPublicFilters(AdvertisementStatus.PUBLISHED, CATEGORY_ID, USER_ID))
-                .thenReturn(List.of(published));
-        when(advertisementMapper.toResponse(published)).thenReturn(response);
-
-        List<AdvertisementResponse> actual = advertisementService.getAllAdvertisements(
-                CATEGORY_ID,
-                AdvertisementStatus.PUBLISHED,
-                USER_ID
-        );
-
-        assertThat(actual).containsExactly(response);
-    }
-
-    @Test
-    void getAllAdvertisementsShouldRejectNonPublishedPublicStatusFilter() {
-        assertThatThrownBy(() -> advertisementService.getAllAdvertisements(
-                null,
-                AdvertisementStatus.DRAFT,
-                null
-        ))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessage("Public list supports only PUBLISHED status");
-    }
-
-    @Test
     void getAllAdvertisementsByUserIdShouldMapRepositoryResult() {
         Advertisement first = Advertisement.builder().id(1L).build();
         Advertisement second = Advertisement.builder().id(2L).build();
@@ -195,7 +117,7 @@ class AdvertisementServiceImplTest {
         when(advertisementMapper.toResponse(first)).thenReturn(firstResponse);
         when(advertisementMapper.toResponse(second)).thenReturn(secondResponse);
 
-        List<AdvertisementResponse> result = advertisementService.getAllAdvertisementsByUserId(USER_ID);
+        List<AdvertisementResponse> result = ownerAdvertisementService.getAllAdvertisementsByUserId(USER_ID);
 
         assertThat(result).containsExactly(firstResponse, secondResponse);
     }
@@ -205,7 +127,7 @@ class AdvertisementServiceImplTest {
         Advertisement advertisement = advertisement(AdvertisementStatus.DRAFT, author(USER_ID));
         when(advertisementRepository.findById(ADVERTISEMENT_ID)).thenReturn(Optional.of(advertisement));
 
-        advertisementService.deleteAdvertisement(ADVERTISEMENT_ID, USER_ID);
+        ownerAdvertisementService.deleteAdvertisement(ADVERTISEMENT_ID, USER_ID);
 
         verify(advertisementRepository).delete(advertisement);
     }
@@ -215,7 +137,7 @@ class AdvertisementServiceImplTest {
         Advertisement advertisement = advertisement(AdvertisementStatus.DRAFT, author(UUID.randomUUID()));
         when(advertisementRepository.findById(ADVERTISEMENT_ID)).thenReturn(Optional.of(advertisement));
 
-        assertThatThrownBy(() -> advertisementService.deleteAdvertisement(ADVERTISEMENT_ID, USER_ID))
+        assertThatThrownBy(() -> ownerAdvertisementService.deleteAdvertisement(ADVERTISEMENT_ID, USER_ID))
                 .isInstanceOf(ForbiddenOperationException.class)
                 .hasMessage("Forbidden");
 
@@ -245,7 +167,7 @@ class AdvertisementServiceImplTest {
         when(advertisementRepository.save(advertisement)).thenReturn(advertisement);
         when(advertisementMapper.toResponse(advertisement)).thenReturn(response);
 
-        AdvertisementResponse actual = advertisementService.updateAdvertisement(ADVERTISEMENT_ID, request, USER_ID);
+        AdvertisementResponse actual = ownerAdvertisementService.updateAdvertisement(ADVERTISEMENT_ID, request, USER_ID);
 
         assertThat(actual).isEqualTo(response);
         assertThat(advertisement.getTitle()).isEqualTo("Updated title");
@@ -263,7 +185,7 @@ class AdvertisementServiceImplTest {
 
         when(advertisementRepository.findById(ADVERTISEMENT_ID)).thenReturn(Optional.of(advertisement));
 
-        assertThatThrownBy(() -> advertisementService.updateAdvertisement(ADVERTISEMENT_ID, request, USER_ID))
+        assertThatThrownBy(() -> ownerAdvertisementService.updateAdvertisement(ADVERTISEMENT_ID, request, USER_ID))
                 .isInstanceOf(ForbiddenOperationException.class)
                 .hasMessage("Forbidden");
 
@@ -290,7 +212,7 @@ class AdvertisementServiceImplTest {
         when(advertisementRepository.save(advertisement)).thenReturn(saved);
         when(advertisementMapper.toResponse(saved)).thenReturn(response);
 
-        AdvertisementResponse actual = advertisementService.publishAdvertisement(ADVERTISEMENT_ID, USER_ID);
+        AdvertisementResponse actual = ownerAdvertisementService.publishAdvertisement(ADVERTISEMENT_ID, USER_ID);
 
         assertThat(actual.status()).isEqualTo(AdvertisementStatus.PUBLISHED);
         assertThat(advertisement.getStatus()).isEqualTo(AdvertisementStatus.PUBLISHED);
@@ -304,7 +226,7 @@ class AdvertisementServiceImplTest {
 
         when(advertisementRepository.findById(ADVERTISEMENT_ID)).thenReturn(Optional.of(advertisement));
 
-        assertThatThrownBy(() -> advertisementService.publishAdvertisement(ADVERTISEMENT_ID, USER_ID))
+        assertThatThrownBy(() -> ownerAdvertisementService.publishAdvertisement(ADVERTISEMENT_ID, USER_ID))
                 .isInstanceOf(ForbiddenOperationException.class)
                 .hasMessage("Forbidden");
 
@@ -317,7 +239,7 @@ class AdvertisementServiceImplTest {
 
         when(advertisementRepository.findById(ADVERTISEMENT_ID)).thenReturn(Optional.of(advertisement));
 
-        assertThatThrownBy(() -> advertisementService.publishAdvertisement(ADVERTISEMENT_ID, USER_ID))
+        assertThatThrownBy(() -> ownerAdvertisementService.publishAdvertisement(ADVERTISEMENT_ID, USER_ID))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Only DRAFT can be published");
 

@@ -2,10 +2,12 @@ package com.peatroxd.bulletinboardproject.advertisement.controller;
 
 import com.peatroxd.bulletinboardproject.advertisement.controller.impl.AdvertisementControllerImpl;
 import com.peatroxd.bulletinboardproject.advertisement.dto.request.AdvertisementCreateRequest;
+import com.peatroxd.bulletinboardproject.advertisement.dto.request.PublicAdvertisementFilter;
 import com.peatroxd.bulletinboardproject.advertisement.dto.response.AdvertisementResponse;
 import com.peatroxd.bulletinboardproject.advertisement.enums.AdvertisementStatus;
 import com.peatroxd.bulletinboardproject.advertisement.enums.AdvertisementType;
-import com.peatroxd.bulletinboardproject.advertisement.service.AdvertisementService;
+import com.peatroxd.bulletinboardproject.advertisement.service.OwnerAdvertisementService;
+import com.peatroxd.bulletinboardproject.advertisement.service.PublicAdvertisementQueryService;
 import com.peatroxd.bulletinboardproject.common.exception.BadRequestException;
 import com.peatroxd.bulletinboardproject.common.exception.ForbiddenOperationException;
 import com.peatroxd.bulletinboardproject.common.exception.GlobalExceptionHandler;
@@ -66,7 +68,10 @@ class AdvertisementControllerWebMvcTest {
             """;
 
     @Mock
-    private AdvertisementService advertisementService;
+    private PublicAdvertisementQueryService publicAdvertisementQueryService;
+
+    @Mock
+    private OwnerAdvertisementService ownerAdvertisementService;
 
     @InjectMocks
     private AdvertisementControllerImpl advertisementController;
@@ -88,7 +93,7 @@ class AdvertisementControllerWebMvcTest {
 
     @Test
     void getAllAdvertisementsShouldReturnOk() throws Exception {
-        when(advertisementService.getAllAdvertisements(null, null, null)).thenReturn(List.of(
+        when(publicAdvertisementQueryService.getAllAdvertisements(new PublicAdvertisementFilter(null, null, null))).thenReturn(List.of(
                 AdvertisementResponse.builder().id(1L).title("First").build(),
                 AdvertisementResponse.builder().id(2L).title("Second").build()
         ));
@@ -98,14 +103,15 @@ class AdvertisementControllerWebMvcTest {
                 .andExpect(jsonPath("$[0].id").value(1L))
                 .andExpect(jsonPath("$[1].title").value("Second"));
 
-        verify(advertisementService).getAllAdvertisements(null, null, null);
+        verify(publicAdvertisementQueryService).getAllAdvertisements(new PublicAdvertisementFilter(null, null, null));
     }
 
     @Test
     void getAllAdvertisementsShouldPassFiltersToService() throws Exception {
         UUID authorId = UUID.randomUUID();
+        PublicAdvertisementFilter filter = new PublicAdvertisementFilter(CATEGORY_ID, AdvertisementStatus.PUBLISHED, authorId);
 
-        when(advertisementService.getAllAdvertisements(CATEGORY_ID, AdvertisementStatus.PUBLISHED, authorId))
+        when(publicAdvertisementQueryService.getAllAdvertisements(filter))
                 .thenReturn(List.of(AdvertisementResponse.builder().id(1L).build()));
 
         mockMvc.perform(get("/advertisements")
@@ -115,7 +121,7 @@ class AdvertisementControllerWebMvcTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(1L));
 
-        verify(advertisementService).getAllAdvertisements(CATEGORY_ID, AdvertisementStatus.PUBLISHED, authorId);
+        verify(publicAdvertisementQueryService).getAllAdvertisements(filter);
     }
 
     @Test
@@ -123,7 +129,7 @@ class AdvertisementControllerWebMvcTest {
         UUID userId = UUID.randomUUID();
         setCurrentJwtUser(userId);
 
-        when(advertisementService.getAllAdvertisementsByUserId(userId)).thenReturn(List.of(
+        when(ownerAdvertisementService.getAllAdvertisementsByUserId(userId)).thenReturn(List.of(
                 AdvertisementResponse.builder().id(10L).title("My first").build(),
                 AdvertisementResponse.builder().id(11L).title("My second").build()
         ));
@@ -133,7 +139,7 @@ class AdvertisementControllerWebMvcTest {
                 .andExpect(jsonPath("$[0].id").value(10L))
                 .andExpect(jsonPath("$[1].title").value("My second"));
 
-        verify(advertisementService).getAllAdvertisementsByUserId(userId);
+        verify(ownerAdvertisementService).getAllAdvertisementsByUserId(userId);
     }
 
     @Test
@@ -144,7 +150,7 @@ class AdvertisementControllerWebMvcTest {
         AdvertisementCreateRequest request = createRequest();
         AdvertisementResponse response = draftResponse(55L);
 
-        when(advertisementService.createAdvertisement(request, userId)).thenReturn(response);
+        when(ownerAdvertisementService.createAdvertisement(request, userId)).thenReturn(response);
 
         mockMvc.perform(post("/advertisements")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -153,7 +159,7 @@ class AdvertisementControllerWebMvcTest {
                 .andExpect(jsonPath("$.id").value(55L))
                 .andExpect(jsonPath("$.status").value("DRAFT"));
 
-        verify(advertisementService).createAdvertisement(request, userId);
+        verify(ownerAdvertisementService).createAdvertisement(request, userId);
     }
 
     @Test
@@ -172,7 +178,7 @@ class AdvertisementControllerWebMvcTest {
                 .title("Updated title")
                 .build();
 
-        when(advertisementService.updateAdvertisement(ADVERTISEMENT_ID, request, userId)).thenReturn(response);
+        when(ownerAdvertisementService.updateAdvertisement(ADVERTISEMENT_ID, request, userId)).thenReturn(response);
 
         mockMvc.perform(put("/advertisements/{id}", ADVERTISEMENT_ID)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -180,7 +186,7 @@ class AdvertisementControllerWebMvcTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(ADVERTISEMENT_ID));
 
-        verify(advertisementService).updateAdvertisement(ADVERTISEMENT_ID, request, userId);
+        verify(ownerAdvertisementService).updateAdvertisement(ADVERTISEMENT_ID, request, userId);
     }
 
     @Test
@@ -191,7 +197,7 @@ class AdvertisementControllerWebMvcTest {
         mockMvc.perform(delete("/advertisements/{id}", ADVERTISEMENT_ID))
                 .andExpect(status().isNoContent());
 
-        verify(advertisementService).deleteAdvertisement(ADVERTISEMENT_ID, userId);
+        verify(ownerAdvertisementService).deleteAdvertisement(ADVERTISEMENT_ID, userId);
     }
 
     @Test
@@ -200,18 +206,18 @@ class AdvertisementControllerWebMvcTest {
         setCurrentJwtUser(userId);
         AdvertisementResponse response = publishedResponse(ADVERTISEMENT_ID);
 
-        when(advertisementService.publishAdvertisement(ADVERTISEMENT_ID, userId)).thenReturn(response);
+        when(ownerAdvertisementService.publishAdvertisement(ADVERTISEMENT_ID, userId)).thenReturn(response);
 
         mockMvc.perform(patch("/advertisements/{id}", ADVERTISEMENT_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("PUBLISHED"));
 
-        verify(advertisementService).publishAdvertisement(ADVERTISEMENT_ID, userId);
+        verify(ownerAdvertisementService).publishAdvertisement(ADVERTISEMENT_ID, userId);
     }
 
     @Test
     void getAdvertisementByIdShouldReturn404WhenAdvertisementIsMissing() throws Exception {
-        when(advertisementService.getAdvertisementById(ADVERTISEMENT_ID))
+        when(publicAdvertisementQueryService.getAdvertisementById(ADVERTISEMENT_ID))
                 .thenThrow(new ResourceNotFoundException("Advertisement not found."));
 
         mockMvc.perform(get("/advertisements/{id}", ADVERTISEMENT_ID))
@@ -227,7 +233,7 @@ class AdvertisementControllerWebMvcTest {
         setCurrentJwtUser(userId);
 
         doThrow(new ForbiddenOperationException("Forbidden"))
-                .when(advertisementService).deleteAdvertisement(ADVERTISEMENT_ID, userId);
+                .when(ownerAdvertisementService).deleteAdvertisement(ADVERTISEMENT_ID, userId);
 
         mockMvc.perform(delete("/advertisements/{id}", ADVERTISEMENT_ID))
                 .andExpect(status().isForbidden())
@@ -241,7 +247,7 @@ class AdvertisementControllerWebMvcTest {
         UUID userId = UUID.randomUUID();
         setCurrentJwtUser(userId);
 
-        when(advertisementService.publishAdvertisement(ADVERTISEMENT_ID, userId))
+        when(ownerAdvertisementService.publishAdvertisement(ADVERTISEMENT_ID, userId))
                 .thenThrow(new BadRequestException("Only DRAFT can be published"));
 
         mockMvc.perform(patch("/advertisements/{id}", ADVERTISEMENT_ID))
