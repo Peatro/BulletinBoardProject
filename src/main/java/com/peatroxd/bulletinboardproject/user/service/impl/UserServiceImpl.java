@@ -2,7 +2,7 @@ package com.peatroxd.bulletinboardproject.user.service.impl;
 
 import com.peatroxd.bulletinboardproject.common.enums.NotFoundExceptionMessage;
 import com.peatroxd.bulletinboardproject.common.exception.ResourceNotFoundException;
-import com.peatroxd.bulletinboardproject.security.Role;
+import com.peatroxd.bulletinboardproject.user.dto.request.AdminUserUpdateRequest;
 import com.peatroxd.bulletinboardproject.user.dto.request.UserUpdateRequest;
 import com.peatroxd.bulletinboardproject.user.dto.response.UserResponse;
 import com.peatroxd.bulletinboardproject.user.entity.User;
@@ -23,8 +23,8 @@ public class UserServiceImpl implements UserService {
         return userRepository.save(user);
     }
 
-    public User getUser(UUID id) {
-        return findUserByIdOrThrow(id);
+    public UserResponse getUser(UUID id) {
+        return UserResponse.from(findByIdOrThrow(id));
     }
 
     public UserResponse getCurrentUser(UUID keycloakUserId) {
@@ -40,16 +40,16 @@ public class UserServiceImpl implements UserService {
         return UserResponse.from(userRepository.save(existing));
     }
 
-    public User updateUser(UUID id, User user, Role role) {
-        User existing = findUserByIdOrThrow(id);
-        existing.setUsername(user.getUsername());
-        existing.setEmail(user.getEmail());
-        existing.setFirstName(user.getFirstName());
-        existing.setLastName(user.getLastName());
-        existing.setPhone(user.getPhone());
-        existing.setRole(role);
-        existing.setEnabled(user.isEnabled());
-        return userRepository.save(existing);
+    public UserResponse updateUser(UUID id, AdminUserUpdateRequest request) {
+        User existing = findByIdOrThrow(id);
+        existing.setUsername(request.username());
+        existing.setEmail(request.email());
+        existing.setFirstName(request.firstName());
+        existing.setLastName(request.lastName());
+        existing.setPhone(request.phone());
+        existing.setRole(request.role());
+        existing.setEnabled(request.enabled());
+        return UserResponse.from(userRepository.save(existing));
     }
 
     public void deleteUser(UUID id) {
@@ -61,13 +61,13 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new ResourceNotFoundException(NotFoundExceptionMessage.USER_NOT_FOUND.getMessage()));
     }
 
-    public User findByKeycloakUserIdOrThrow(UUID keycloakUserId) {
-        return userRepository.findByKeycloakUserId(keycloakUserId)
+    public User findByIdOrThrow(UUID id) {
+        return userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(NotFoundExceptionMessage.USER_NOT_FOUND.getMessage()));
     }
 
-    private User findUserByIdOrThrow(UUID id) {
-        return userRepository.findById(id)
+    public User findByKeycloakUserIdOrThrow(UUID keycloakUserId) {
+        return userRepository.findByKeycloakUserId(keycloakUserId)
                 .orElseThrow(() -> new ResourceNotFoundException(NotFoundExceptionMessage.USER_NOT_FOUND.getMessage()));
     }
 }
