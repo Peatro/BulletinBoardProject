@@ -45,4 +45,49 @@ class CategoryServiceImplTest {
                 new CategoryResponse(2L, "Cars", 1L)
         );
     }
+
+    @Test
+    void getAllCategoriesShouldReturnSortedHierarchy() {
+        Category transport = Category.builder()
+                .id(1L)
+                .name("Transport")
+                .build();
+        Category cars = Category.builder()
+                .id(3L)
+                .name("Cars")
+                .parent(transport)
+                .build();
+        Category motorcycles = Category.builder()
+                .id(2L)
+                .name("Motorcycles")
+                .parent(transport)
+                .build();
+        Category electronics = Category.builder()
+                .id(10L)
+                .name("Electronics")
+                .build();
+        Category computers = Category.builder()
+                .id(12L)
+                .name("Computers")
+                .parent(electronics)
+                .build();
+
+        when(categoryRepository.findAll()).thenReturn(List.of(
+                computers,
+                motorcycles,
+                transport,
+                cars,
+                electronics
+        ));
+
+        List<CategoryResponse> response = categoryService.getAllCategories();
+
+        assertThat(response).containsExactly(
+                new CategoryResponse(1L, "Transport", null),
+                new CategoryResponse(3L, "Cars", 1L),
+                new CategoryResponse(2L, "Motorcycles", 1L),
+                new CategoryResponse(10L, "Electronics", null),
+                new CategoryResponse(12L, "Computers", 10L)
+        );
+    }
 }

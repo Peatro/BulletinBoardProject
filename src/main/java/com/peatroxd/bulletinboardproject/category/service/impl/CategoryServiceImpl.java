@@ -9,6 +9,7 @@ import com.peatroxd.bulletinboardproject.common.exception.ResourceNotFoundExcept
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -26,6 +27,10 @@ public class CategoryServiceImpl implements CategoryService {
     public List<CategoryResponse> getAllCategories() {
         return categoryRepository.findAll()
                 .stream()
+                .sorted(Comparator
+                        .comparing((Category category) -> category.getParent() != null ? category.getParent().getId() : category.getId())
+                        .thenComparing(category -> category.getParent() == null ? 0 : 1)
+                        .thenComparing(Category::getName))
                 .map(CategoryResponse::from)
                 .toList();
     }
