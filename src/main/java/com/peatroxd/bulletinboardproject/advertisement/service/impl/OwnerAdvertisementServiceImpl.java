@@ -61,10 +61,7 @@ public class OwnerAdvertisementServiceImpl implements OwnerAdvertisementService 
 
         validateOwnership(advertisement, userId);
 
-        advertisement.setTitle(request.title());
-        advertisement.setDescription(request.description());
-        advertisement.setPrice(request.price());
-        advertisement.setType(request.advertisementType());
+        advertisementMapper.updateEntity(request, advertisement);
         advertisement.setCategory(category);
         advertisement.setUpdatedAt(LocalDateTime.now());
 
