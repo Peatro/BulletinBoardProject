@@ -2,15 +2,16 @@ package com.peatroxd.bulletinboardproject.user.service.impl;
 
 import com.peatroxd.bulletinboardproject.common.enums.NotFoundExceptionMessage;
 import com.peatroxd.bulletinboardproject.common.exception.ResourceNotFoundException;
+import com.peatroxd.bulletinboardproject.user.dto.request.AdminUserUpdateRequest;
+import com.peatroxd.bulletinboardproject.user.dto.request.UserUpdateRequest;
+import com.peatroxd.bulletinboardproject.user.dto.response.UserResponse;
 import com.peatroxd.bulletinboardproject.user.entity.User;
+import com.peatroxd.bulletinboardproject.user.mapper.UserMapper;
 import com.peatroxd.bulletinboardproject.user.repository.UserRepository;
-import com.peatroxd.bulletinboardproject.security.Role;
 import com.peatroxd.bulletinboardproject.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -18,34 +19,48 @@ import java.util.UUID;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
-    public User create(User user, Role role) {
-        user.setEnabled(true);
-        user.setRole(role);
+    public User createLocalUser(User user) {
         return userRepository.save(user);
     }
 
-    public List<User> list() {
-        return userRepository.findAll();
+    public UserResponse getUser(UUID id) {
+        return UserResponse.from(findByIdOrThrow(id));
     }
 
-    public User findUserByIdOrThrow(UUID id) {
-        return userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(NotFoundExceptionMessage.USER_NOT_FOUND.getMessage()));
+    public UserResponse getCurrentUser(UUID keycloakUserId) {
+        return UserResponse.from(findByKeycloakUserIdOrThrow(keycloakUserId));
     }
 
-    public User update(UUID id, User user, Role role) {
-        user.setId(id);
-        user.setRole(role);
-        return userRepository.save(user);
+    public UserResponse updateCurrentUser(UUID keycloakUserId, UserUpdateRequest request) {
+        User existing = findByKeycloakUserIdOrThrow(keycloakUserId);
+        userMapper.updateCurrentUser(request, existing);
+        return UserResponse.from(userRepository.save(existing));
     }
 
-    public void delete(UUID id) {
+    public UserResponse updateUser(UUID id, AdminUserUpdateRequest request) {
+        User existing = findByIdOrThrow(id);
+        userMapper.updateAdminUser(request, existing);
+        return UserResponse.from(userRepository.save(existing));
+    }
+
+    public void deleteUser(UUID id) {
         userRepository.deleteById(id);
     }
 
     public User findByUsernameOrThrow(String username) {
         return userRepository.findUserByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException(NotFoundExceptionMessage.USER_NOT_FOUND.getMessage()));
+    }
+
+    public User findByIdOrThrow(UUID id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(NotFoundExceptionMessage.USER_NOT_FOUND.getMessage()));
+    }
+
+    public User findByKeycloakUserIdOrThrow(UUID keycloakUserId) {
+        return userRepository.findByKeycloakUserId(keycloakUserId)
                 .orElseThrow(() -> new ResourceNotFoundException(NotFoundExceptionMessage.USER_NOT_FOUND.getMessage()));
     }
 }

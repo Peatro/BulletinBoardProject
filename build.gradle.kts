@@ -43,12 +43,14 @@ dependencies {
 	implementation("org.mapstruct:mapstruct:1.5.5.Final")
 	annotationProcessor("org.mapstruct:mapstruct-processor:1.5.5.Final")
 
+	annotationProcessor("org.projectlombok:lombok-mapstruct-binding:0.2.0")
+
 	// --- Lombok ---
 	compileOnly("org.projectlombok:lombok")
 	annotationProcessor("org.projectlombok:lombok")
 
 	// --- OpenAPI ---
-	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
+	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.0")
 
 	// --- Test ---
 	testImplementation(platform("org.testcontainers:testcontainers-bom:1.20.4"))

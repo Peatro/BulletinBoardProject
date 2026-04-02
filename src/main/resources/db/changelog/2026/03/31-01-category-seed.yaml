@@ -1,0 +1,221 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260331-01-category-seed
+      author: Codex
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - insert:
+            tableName: categories
+            columns:
+              - column: { name: id, valueNumeric: 100 }
+              - column: { name: name, value: "Transport" }
+        - insert:
+            tableName: categories
+            columns:
+              - column: { name: id, valueNumeric: 101 }
+              - column: { name: name, value: "Cars" }
+              - column: { name: parent_id, valueNumeric: 100 }
+        - insert:
+            tableName: categories
+            columns:
+              - column: { name: id, valueNumeric: 102 }
+              - column: { name: name, value: "Motorcycles" }
+              - column: { name: parent_id, valueNumeric: 100 }
+        - insert:
+            tableName: categories
+            columns:
+              - column: { name: id, valueNumeric: 103 }
+              - column: { name: name, value: "Spare parts" }
+              - column: { name: parent_id, valueNumeric: 100 }
+
+        - insert:
+            tableName: categories
+            columns:
+              - column: { name: id, valueNumeric: 200 }
+              - column: { name: name, value: "Real estate" }
+        - insert:
+            tableName: categories
+            columns:
+              - column: { name: id, valueNumeric: 201 }
+              - column: { name: name, value: "Apartments" }
+              - column: { name: parent_id, valueNumeric: 200 }
+        - insert:
+            tableName: categories
+            columns:
+              - column: { name: id, valueNumeric: 202 }
+              - column: { name: name, value: "Rooms" }
+              - column: { name: parent_id, valueNumeric: 200 }
+        - insert:
+            tableName: categories
+            columns:
+              - column: { name: id, valueNumeric: 203 }
+              - column: { name: name, value: "Houses and cottages" }
+              - column: { name: parent_id, valueNumeric: 200 }
+        - insert:
+            tableName: categories
+            columns:
+              - column: { name: id, valueNumeric: 204 }
+              - column: { name: name, value: "Commercial property" }
+              - column: { name: parent_id, valueNumeric: 200 }
+
+        - insert:
+            tableName: categories
+            columns:
+              - column: { name: id, valueNumeric: 300 }
+              - column: { name: name, value: "Electronics" }
+        - insert:
+            tableName: categories
+            columns:
+              - column: { name: id, valueNumeric: 301 }
+              - column: { name: name, value: "Phones" }
+              - column: { name: parent_id, valueNumeric: 300 }
+        - insert:
+            tableName: categories
+            columns:
+              - column: { name: id, valueNumeric: 302 }
+              - column: { name: name, value: "Computers" }
+              - column: { name: parent_id, valueNumeric: 300 }
+        - insert:
+            tableName: categories
+            columns:
+              - column: { name: id, valueNumeric: 303 }
+              - column: { name: name, value: "TV, audio, video" }
+              - column: { name: parent_id, valueNumeric: 300 }
+        - insert:
+            tableName: categories
+            columns:
+              - column: { name: id, valueNumeric: 304 }
+              - column: { name: name, value: "Gaming consoles and games" }
+              - column: { name: parent_id, valueNumeric: 300 }
+
+        - insert:
+            tableName: categories
+            columns:
+              - column: { name: id, valueNumeric: 400 }
+              - column: { name: name, value: "Clothing and personal items" }
+        - insert:
+            tableName: categories
+            columns:
+              - column: { name: id, valueNumeric: 401 }
+              - column: { name: name, value: "Women clothing" }
+              - column: { name: parent_id, valueNumeric: 400 }
+        - insert:
+            tableName: categories
+            columns:
+              - column: { name: id, valueNumeric: 402 }
+              - column: { name: name, value: "Men clothing" }
+              - column: { name: parent_id, valueNumeric: 400 }
+        - insert:
+            tableName: categories
+            columns:
+              - column: { name: id, valueNumeric: 403 }
+              - column: { name: name, value: "Shoes" }
+              - column: { name: parent_id, valueNumeric: 400 }
+        - insert:
+            tableName: categories
+            columns:
+              - column: { name: id, valueNumeric: 404 }
+              - column: { name: name, value: "Accessories" }
+              - column: { name: parent_id, valueNumeric: 400 }
+
+        - insert:
+            tableName: categories
+            columns:
+              - column: { name: id, valueNumeric: 500 }
+              - column: { name: name, value: "Home and garden" }
+        - insert:
+            tableName: categories
+            columns:
+              - column: { name: id, valueNumeric: 501 }
+              - column: { name: name, value: "Furniture" }
+              - column: { name: parent_id, valueNumeric: 500 }
+        - insert:
+            tableName: categories
+            columns:
+              - column: { name: id, valueNumeric: 502 }
+              - column: { name: name, value: "Appliances" }
+              - column: { name: parent_id, valueNumeric: 500 }
+        - insert:
+            tableName: categories
+            columns:
+              - column: { name: id, valueNumeric: 503 }
+              - column: { name: name, value: "Repair and construction" }
+              - column: { name: parent_id, valueNumeric: 500 }
+
+        - insert:
+            tableName: categories
+            columns:
+              - column: { name: id, valueNumeric: 600 }
+              - column: { name: name, value: "Jobs" }
+        - insert:
+            tableName: categories
+            columns:
+              - column: { name: id, valueNumeric: 601 }
+              - column: { name: name, value: "IT and digital" }
+              - column: { name: parent_id, valueNumeric: 600 }
+        - insert:
+            tableName: categories
+            columns:
+              - column: { name: id, valueNumeric: 602 }
+              - column: { name: name, value: "Sales" }
+              - column: { name: parent_id, valueNumeric: 600 }
+        - insert:
+            tableName: categories
+            columns:
+              - column: { name: id, valueNumeric: 603 }
+              - column: { name: name, value: "Logistics" }
+              - column: { name: parent_id, valueNumeric: 600 }
+
+        - insert:
+            tableName: categories
+            columns:
+              - column: { name: id, valueNumeric: 700 }
+              - column: { name: name, value: "Services" }
+        - insert:
+            tableName: categories
+            columns:
+              - column: { name: id, valueNumeric: 701 }
+              - column: { name: name, value: "Repair services" }
+              - column: { name: parent_id, valueNumeric: 700 }
+        - insert:
+            tableName: categories
+            columns:
+              - column: { name: id, valueNumeric: 702 }
+              - column: { name: name, value: "Beauty and health" }
+              - column: { name: parent_id, valueNumeric: 700 }
+        - insert:
+            tableName: categories
+            columns:
+              - column: { name: id, valueNumeric: 703 }
+              - column: { name: name, value: "Education and tutoring" }
+              - column: { name: parent_id, valueNumeric: 700 }
+        - insert:
+            tableName: categories
+            columns:
+              - column: { name: id, valueNumeric: 704 }
+              - column: { name: name, value: "Transportation services" }
+              - column: { name: parent_id, valueNumeric: 700 }
+
+        - insert:
+            tableName: categories
+            columns:
+              - column: { name: id, valueNumeric: 800 }
+              - column: { name: name, value: "Hobbies and leisure" }
+        - insert:
+            tableName: categories
+            columns:
+              - column: { name: id, valueNumeric: 801 }
+              - column: { name: name, value: "Sports and outdoor" }
+              - column: { name: parent_id, valueNumeric: 800 }
+        - insert:
+            tableName: categories
+            columns:
+              - column: { name: id, valueNumeric: 802 }
+              - column: { name: name, value: "Books and magazines" }
+              - column: { name: parent_id, valueNumeric: 800 }
+        - insert:
+            tableName: categories
+            columns:
+              - column: { name: id, valueNumeric: 803 }
+              - column: { name: name, value: "Music instruments" }
+              - column: { name: parent_id, valueNumeric: 800 }

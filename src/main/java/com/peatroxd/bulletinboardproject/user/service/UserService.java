@@ -1,23 +1,29 @@
 package com.peatroxd.bulletinboardproject.user.service;
 
+import com.peatroxd.bulletinboardproject.user.dto.request.AdminUserUpdateRequest;
+import com.peatroxd.bulletinboardproject.user.dto.request.UserUpdateRequest;
+import com.peatroxd.bulletinboardproject.user.dto.response.UserResponse;
 import com.peatroxd.bulletinboardproject.user.entity.User;
-import com.peatroxd.bulletinboardproject.security.Role;
 
-import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 public interface UserService {
 
-    User create(User user, Role role);
+    User createLocalUser(User user);
 
-    List<User> list();
+    UserResponse getUser(UUID id);
 
-    User findUserByIdOrThrow(UUID id);
+    UserResponse getCurrentUser(UUID keycloakUserId);
 
-    User update(UUID id, User user, Role role);
+    UserResponse updateCurrentUser(UUID keycloakUserId, UserUpdateRequest request);
 
-    void delete(UUID id);
+    UserResponse updateUser(UUID id, AdminUserUpdateRequest request);
+
+    void deleteUser(UUID id);
 
     User findByUsernameOrThrow(String username);
+
+    User findByIdOrThrow(UUID id);
+
+    User findByKeycloakUserIdOrThrow(UUID keycloakUserId);
 }

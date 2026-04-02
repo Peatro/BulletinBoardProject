@@ -1,0 +1,319 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1774025450008-1
+      author: Peatr
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_advertisement
+                  name: id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: title
+                  type: VARCHAR(100)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: description
+                  type: VARCHAR(2000)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: price
+                  type: DECIMAL(19, 2)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: status
+                  type: VARCHAR(30)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: type
+                  type: VARCHAR(30)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: author_id
+                  type: uuid
+              - column:
+                  constraints:
+                    nullable: false
+                  name: category_id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: created_at
+                  type: DATETIME
+              - column:
+                  name: updated_at
+                  type: DATETIME
+              - column:
+                  name: published_at
+                  type: DATETIME
+            tableName: advertisement
+  - changeSet:
+      id: 1774025450008-2
+      author: Peatr
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_categories
+                  name: id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: name
+                  type: VARCHAR(255)
+              - column:
+                  name: parent_id
+                  type: BIGINT
+            tableName: categories
+  - changeSet:
+      id: 1774025450008-3
+      author: Peatr
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_comments
+                  name: id
+                  type: BIGINT
+              - column:
+                  name: text
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: author_id
+                  type: uuid
+              - column:
+                  constraints:
+                    nullable: false
+                  name: advertisement_id
+                  type: BIGINT
+              - column:
+                  name: created_at
+                  type: DATETIME
+            tableName: comments
+  - changeSet:
+      id: 1774025450008-4
+      author: Peatr
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_images
+                  name: id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: advertisement_id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: object_key
+                  type: VARCHAR(500)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: sort_order
+                  type: INT
+              - column:
+                  name: original_file_name
+                  type: VARCHAR(255)
+              - column:
+                  name: content_type
+                  type: VARCHAR(255)
+              - column:
+                  name: size_bytes
+                  type: BIGINT
+            tableName: images
+  - changeSet:
+      id: 1774025450008-5
+      author: Peatr
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_users
+                  name: id
+                  type: uuid
+              - column:
+                  constraints:
+                    nullable: false
+                  name: username
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: email
+                  type: VARCHAR(255)
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+              - column:
+                  name: phone
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: role
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: enabled
+                  type: BOOLEAN
+            tableName: users
+  - changeSet:
+      id: 1774025450008-6
+      author: Peatr
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addUniqueConstraint:
+            columnNames: username
+            constraintName: uc_users_username
+            tableName: users
+  - changeSet:
+      id: 1774025450008-7
+      author: Peatr
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: author_id
+            baseTableName: advertisement
+            constraintName: FK_ADVERTISEMENT_ON_AUTHOR
+            referencedColumnNames: id
+            referencedTableName: users
+  - changeSet:
+      id: 1774025450008-8
+      author: Peatr
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: category_id
+            baseTableName: advertisement
+            constraintName: FK_ADVERTISEMENT_ON_CATEGORY
+            referencedColumnNames: id
+            referencedTableName: categories
+  - changeSet:
+      id: 1774025450008-9
+      author: Peatr
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: parent_id
+            baseTableName: categories
+            constraintName: FK_CATEGORIES_ON_PARENT
+            referencedColumnNames: id
+            referencedTableName: categories
+  - changeSet:
+      id: 1774025450008-10
+      author: Peatr
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: advertisement_id
+            baseTableName: comments
+            constraintName: FK_COMMENTS_ON_ADVERTISEMENT
+            referencedColumnNames: id
+            referencedTableName: advertisement
+  - changeSet:
+      id: 1774025450008-11
+      author: Peatr
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: author_id
+            baseTableName: comments
+            constraintName: FK_COMMENTS_ON_AUTHOR
+            referencedColumnNames: id
+            referencedTableName: users
+  - changeSet:
+      id: 1774025450008-12
+      author: Peatr
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: advertisement_id
+            baseTableName: images
+            constraintName: FK_IMAGES_ON_ADVERTISEMENT
+            referencedColumnNames: id
+            referencedTableName: advertisement
+  - changeSet:
+      id: 1774025450008-13
+      author: Peatr
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addColumn:
+            tableName: users
+            columns:
+              - column:
+                  name: keycloak_user_id
+                  type: uuid
+        - sql:
+            sql: UPDATE users SET keycloak_user_id = id WHERE keycloak_user_id IS NULL
+        - addNotNullConstraint:
+            tableName: users
+            columnName: keycloak_user_id
+            columnDataType: uuid
+        - addUniqueConstraint:
+            tableName: users
+            columnNames: keycloak_user_id
+            constraintName: uc_users_keycloak_user_id
+  - changeSet:
+      id: 1774025450008-14
+      author: Peatr
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addColumn:
+            tableName: users
+            columns:
+              - column:
+                  name: first_name
+                  type: VARCHAR(255)
+              - column:
+                  name: last_name
+                  type: VARCHAR(255)
+        - sql:
+            sql: UPDATE users SET first_name = COALESCE(name, username)
+        - addNotNullConstraint:
+            tableName: users
+            columnName: first_name
+            columnDataType: VARCHAR(255)
+        - dropColumn:
+            tableName: users
+            columnName: name
+

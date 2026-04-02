@@ -1,16 +1,12 @@
 spring:
   application:
     name: bulletin-board
-
-  datasource:
-    url: jdbc:postgresql://localhost:5432/board
-    username: postgres
-    password: postgres
+  profiles:
+    default: dev
 
   jpa:
     hibernate:
       ddl-auto: validate
-    show-sql: true
 
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
@@ -20,7 +16,17 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8081/realms/board-realm
+          issuer-uri: ${JWT_ISSUER_URI:${KEYCLOAK_BASE_URL:http://localhost:8081}/realms/${KEYCLOAK_REALM:board-realm}}
+
+keycloak:
+  admin:
+    server-url: ${KEYCLOAK_BASE_URL:http://localhost:8081}
+    realm: ${KEYCLOAK_REALM:board-realm}
+    token-realm: ${KEYCLOAK_TOKEN_REALM:${KEYCLOAK_REALM:board-realm}}
+    client-id: ${KEYCLOAK_CLIENT_ID:board-backend}
+    client-secret: ${KEYCLOAK_CLIENT_SECRET:Qd5eK8Yy4YgwHtkRaZ4sOtra4m7eK6JI}
+    username: ${KEYCLOAK_ADMIN:admin}
+    password: ${KEYCLOAK_ADMIN_PASSWORD:admin}
 
 server:
-  port: 8080
+  port: ${SERVER_PORT:9090}

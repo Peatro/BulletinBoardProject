@@ -1,23 +1,18 @@
 package com.peatroxd.bulletinboardproject.advertisement.controller.impl;
 
 import com.peatroxd.bulletinboardproject.advertisement.controller.AdvertisementController;
-import com.peatroxd.bulletinboardproject.advertisement.dto.request.CreateAdvertisementRequest;
+import com.peatroxd.bulletinboardproject.advertisement.dto.request.AdvertisementCreateRequest;
+import com.peatroxd.bulletinboardproject.advertisement.dto.request.PublicAdvertisementFilter;
 import com.peatroxd.bulletinboardproject.advertisement.dto.response.AdvertisementResponse;
-import com.peatroxd.bulletinboardproject.advertisement.entity.Advertisement;
-import com.peatroxd.bulletinboardproject.advertisement.mapper.AdvertisementMapper;
-import com.peatroxd.bulletinboardproject.advertisement.service.AdvertisementService;
-import jakarta.validation.Valid;
+import com.peatroxd.bulletinboardproject.advertisement.enums.AdvertisementStatus;
+import com.peatroxd.bulletinboardproject.advertisement.service.OwnerAdvertisementService;
+import com.peatroxd.bulletinboardproject.advertisement.service.PublicAdvertisementQueryService;
+import com.peatroxd.bulletinboardproject.security.annotation.CurrentUser;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -25,42 +20,69 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/announcements")
+@RequestMapping("/advertisements")
 public class AdvertisementControllerImpl implements AdvertisementController {
 
-    private final AdvertisementService advertisementService;
-    private final AdvertisementMapper mapper;
+    private final PublicAdvertisementQueryService publicAdvertisementQueryService;
+    private final OwnerAdvertisementService ownerAdvertisementService;
 
-    @GetMapping
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    public List<Advertisement> list() {
-        return advertisementService.list();
-    }
-
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    @PostMapping
-    public AdvertisementResponse create(
-            @Valid @RequestBody CreateAdvertisementRequest request,
-            JwtAuthenticationToken token
+    @Override
+    public ResponseEntity<AdvertisementResponse> createAdvertisement(
+            @RequestBody AdvertisementCreateRequest request,
+            @CurrentUser UUID userId
     ) {
-
-        UUID userId = UUID.fromString(token.getToken().getSubject());
-
-        Advertisement advertisement = advertisementService.create(request, userId);
-
-        return mapper.toAdvertisementResponse(advertisement);
+        return ResponseEntity.status(201)
+                .body(ownerAdvertisementService.createAdvertisement(request, userId));
     }
 
-    @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or #a.authorUsername == authentication.name")
-    public Advertisement update(@PathVariable Long id, @RequestBody Advertisement a) {
-        a.setId(id);
-        return advertisementService.update(a);
+    @Override
+    public ResponseEntity<AdvertisementResponse> getAdvertisementById(
+            @PathVariable Long id
+    ) {
+        return ResponseEntity.ok(publicAdvertisementQueryService.getAdvertisementById(id));
     }
 
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or #author == authentication.name")
-    public void delete(@PathVariable Long id, @RequestParam String author) {
-        advertisementService.delete(id);
+    @Override
+    public ResponseEntity<List<AdvertisementResponse>> getAllAdvertisements(
+            Long categoryId,
+            AdvertisementStatus status,
+            UUID authorId
+    ) {
+        return ResponseEntity.ok(publicAdvertisementQueryService.getAllAdvertisements(
+                new PublicAdvertisementFilter(categoryId, status, authorId)
+        ));
+    }
+
+    @Override
+    public ResponseEntity<List<AdvertisementResponse>> getCurrentUserAdvertisements(
+            @CurrentUser UUID userId
+    ) {
+        return ResponseEntity.ok(ownerAdvertisementService.getAllAdvertisementsByUserId(userId));
+    }
+
+    @Override
+    public ResponseEntity<AdvertisementResponse> updateAdvertisement(
+            @PathVariable Long id,
+            @RequestBody AdvertisementCreateRequest request,
+            @CurrentUser UUID userId
+    ) {
+        return ResponseEntity.ok(ownerAdvertisementService.updateAdvertisement(id, request, userId));
+    }
+
+    @Override
+    public ResponseEntity<Void> deleteAdvertisement(
+            @PathVariable Long id,
+            @CurrentUser UUID userId
+    ) {
+        ownerAdvertisementService.deleteAdvertisement(id, userId);
+        return ResponseEntity.status(204).build();
+    }
+
+    @Override
+    public ResponseEntity<AdvertisementResponse> publish(
+            @PathVariable Long id,
+            @CurrentUser UUID userId
+    ) {
+        return ResponseEntity.ok(ownerAdvertisementService.publishAdvertisement(id, userId));
     }
 }
