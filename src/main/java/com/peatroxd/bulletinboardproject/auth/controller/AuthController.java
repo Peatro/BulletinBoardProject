@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,13 +32,12 @@ public class AuthController {
     @Operation(summary = "Регистрация пользователя", description = "Создает пользователя в Keycloak и локальной базе данных")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Пользователь успешно зарегистрирован"),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "Некорректные данные запроса",
-                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
-            )
+            @ApiResponse(responseCode = "400", description = "Некорректные данные запроса",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
+            @ApiResponse(responseCode = "409", description = "Пользователь с таким email или username уже существует",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     })
-    public ResponseEntity<AuthRegisterResponse> register(@RequestBody AuthRegisterRequest request) {
+    public ResponseEntity<AuthRegisterResponse> register(@Valid @RequestBody AuthRegisterRequest request) {
         return ResponseEntity.status(201)
                 .body(authService.register(request));
     }
@@ -46,13 +46,12 @@ public class AuthController {
     @Operation(summary = "Логин пользователя", description = "Возвращает access и refresh token для зарегистрированного пользователя")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Аутентификация успешна"),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "Некорректные учетные данные или запрос",
-                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))
-            )
+            @ApiResponse(responseCode = "400", description = "Некорректные данные запроса (пустые поля)",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Неверный логин или пароль",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     })
-    public ResponseEntity<AuthTokenResponse> login(@RequestBody AuthLoginRequest request) {
+    public ResponseEntity<AuthTokenResponse> login(@Valid @RequestBody AuthLoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
     }
 }

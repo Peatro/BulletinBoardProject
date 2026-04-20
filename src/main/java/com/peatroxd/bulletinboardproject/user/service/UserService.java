@@ -19,6 +19,8 @@ public interface UserService {
 
     UserResponse updateUser(UUID id, AdminUserUpdateRequest request);
 
+    void deleteCurrentUser(UUID keycloakUserId);
+
     void deleteUser(UUID id);
 
     User findByUsernameOrThrow(String username);

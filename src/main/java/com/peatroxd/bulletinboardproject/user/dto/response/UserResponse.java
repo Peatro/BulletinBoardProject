@@ -1,6 +1,5 @@
 package com.peatroxd.bulletinboardproject.user.dto.response;
 
-import com.peatroxd.bulletinboardproject.user.entity.User;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.UUID;
@@ -26,19 +25,4 @@ public record UserResponse(
         @Schema(description = "Флаг активности пользователя", example = "true")
         boolean enabled
 ) {
-    public static UserResponse from(User user) {
-        String role = user.getRole() != null ? user.getRole().name() : null;
-
-        return new UserResponse(
-                user.getId(),
-                user.getKeycloakUserId(),
-                user.getUsername(),
-                user.getEmail(),
-                user.getFirstName(),
-                user.getLastName(),
-                user.getPhone(),
-                role,
-                user.isEnabled()
-        );
-    }
 }

@@ -7,14 +7,14 @@ import com.peatroxd.bulletinboardproject.auth.dto.response.AuthTokenResponse;
 import com.peatroxd.bulletinboardproject.auth.service.AuthService;
 import com.peatroxd.bulletinboardproject.common.exception.RegistrationCompensationException;
 import com.peatroxd.bulletinboardproject.security.Role;
-import com.peatroxd.bulletinboardproject.security.keycloak.KeycloakAuthClient;
 import com.peatroxd.bulletinboardproject.security.keycloak.KeycloakAdminClient;
+import com.peatroxd.bulletinboardproject.security.keycloak.KeycloakAuthClient;
 import com.peatroxd.bulletinboardproject.user.dto.command.UserCreateCommand;
 import com.peatroxd.bulletinboardproject.user.entity.User;
 import com.peatroxd.bulletinboardproject.user.facade.UserFacade;
+import com.peatroxd.bulletinboardproject.user.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import java.util.UUID;
 
@@ -23,12 +23,12 @@ import java.util.UUID;
 public class AuthServiceImpl implements AuthService {
 
     private final UserFacade userFacade;
+    private final UserMapper userMapper;
     private final KeycloakAuthClient keycloakAuthClient;
     private final KeycloakAdminClient keycloakAdminClient;
 
     @Override
     public AuthRegisterResponse register(AuthRegisterRequest request) {
-        validateRegisterRequest(request);
         UUID keycloakUserId = registerKeycloakUser(request);
 
         try {
@@ -41,38 +41,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthTokenResponse login(AuthLoginRequest request) {
-        validateLoginRequest(request);
         return keycloakAuthClient.login(request);
-    }
-
-    private void validateLoginRequest(AuthLoginRequest request) {
-        if (request == null) {
-            throw new IllegalArgumentException("Login request must not be null");
-        }
-        if (!StringUtils.hasText(request.username())) {
-            throw new IllegalArgumentException("Username must not be blank");
-        }
-        if (!StringUtils.hasText(request.password())) {
-            throw new IllegalArgumentException("Password must not be blank");
-        }
-    }
-
-    private void validateRegisterRequest(AuthRegisterRequest request) {
-        if (request == null) {
-            throw new IllegalArgumentException("Register request must not be null");
-        }
-        if (!StringUtils.hasText(request.username())) {
-            throw new IllegalArgumentException("Username must not be blank");
-        }
-        if (!StringUtils.hasText(request.email())) {
-            throw new IllegalArgumentException("Email must not be blank");
-        }
-        if (!StringUtils.hasText(request.firstName())) {
-            throw new IllegalArgumentException("First name must not be blank");
-        }
-        if (!StringUtils.hasText(request.password())) {
-            throw new IllegalArgumentException("Password must not be blank");
-        }
     }
 
     private UUID registerKeycloakUser(AuthRegisterRequest request) {
@@ -100,7 +69,7 @@ public class AuthServiceImpl implements AuthService {
         );
 
         User user = userFacade.createUser(command);
-        return AuthRegisterResponse.from(user);
+        return userMapper.toRegisterResponse(user);
     }
 
     private void compensateFailedRegistration(UUID keycloakUserId, RuntimeException persistenceException) {

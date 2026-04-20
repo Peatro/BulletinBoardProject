@@ -15,9 +15,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -53,7 +56,11 @@ class AuthControllerWebMvcTest {
 
     @BeforeEach
     void setUp() {
+        LocalValidatorFactoryBean validator = new LocalValidatorFactoryBean();
+        validator.afterPropertiesSet();
+
         mockMvc = MockMvcBuilders.standaloneSetup(authController)
+                .setValidator(validator)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
     }
@@ -76,6 +83,57 @@ class AuthControllerWebMvcTest {
     }
 
     @Test
+    void registerShouldReturn400WhenUsernameIsBlank() throws Exception {
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "username": "",
+                                  "email": "alice@example.com",
+                                  "firstName": "Alice",
+                                  "password": "secret123"
+                                }
+                                """))
+                .andExpect(status().isBadRequest());
+
+        verify(authService, never()).register(any());
+    }
+
+    @Test
+    void registerShouldReturn400WhenPasswordIsTooShort() throws Exception {
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "username": "alice",
+                                  "email": "alice@example.com",
+                                  "firstName": "Alice",
+                                  "password": "short"
+                                }
+                                """))
+                .andExpect(status().isBadRequest());
+
+        verify(authService, never()).register(any());
+    }
+
+    @Test
+    void registerShouldReturn400WhenEmailIsInvalid() throws Exception {
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "username": "alice",
+                                  "email": "not-an-email",
+                                  "firstName": "Alice",
+                                  "password": "secret123"
+                                }
+                                """))
+                .andExpect(status().isBadRequest());
+
+        verify(authService, never()).register(any());
+    }
+
+    @Test
     void loginShouldReturnTokenResponse() throws Exception {
         AuthLoginRequest request = loginRequest();
         AuthTokenResponse response = tokenResponse();
@@ -93,17 +151,32 @@ class AuthControllerWebMvcTest {
     }
 
     @Test
-    void loginShouldReturn400WhenCredentialsAreInvalid() throws Exception {
+    void loginShouldReturn400WhenPasswordIsBlank() throws Exception {
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "username": "alice",
+                                  "password": ""
+                                }
+                                """))
+                .andExpect(status().isBadRequest());
+
+        verify(authService, never()).login(any());
+    }
+
+    @Test
+    void loginShouldReturn401WhenCredentialsAreInvalid() throws Exception {
         AuthLoginRequest request = loginRequest();
 
-        when(authService.login(request)).thenThrow(new IllegalArgumentException("Invalid username or password"));
+        when(authService.login(request)).thenThrow(new com.peatroxd.bulletinboardproject.common.exception.UnauthorizedException("Invalid username or password"));
 
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(LOGIN_REQUEST_JSON))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401))
+                .andExpect(jsonPath("$.error").value("Unauthorized"))
                 .andExpect(jsonPath("$.message").value("Invalid username or password"));
     }
 

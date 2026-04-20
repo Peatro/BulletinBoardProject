@@ -29,6 +29,7 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-security")
+	implementation("org.springframework.boot:spring-boot-starter-validation")
 
 	// --- OAuth2 (Keycloak) ---
 	implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
@@ -48,6 +49,9 @@ dependencies {
 	// --- Lombok ---
 	compileOnly("org.projectlombok:lombok")
 	annotationProcessor("org.projectlombok:lombok")
+
+	// --- Keycloak Admin Client ---
+	implementation("org.keycloak:keycloak-admin-client:26.0.5")
 
 	// --- OpenAPI ---
 	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.0")

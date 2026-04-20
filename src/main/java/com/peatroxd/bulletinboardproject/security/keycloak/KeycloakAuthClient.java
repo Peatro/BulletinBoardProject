@@ -2,6 +2,8 @@ package com.peatroxd.bulletinboardproject.security.keycloak;
 
 import com.peatroxd.bulletinboardproject.auth.dto.request.AuthLoginRequest;
 import com.peatroxd.bulletinboardproject.auth.dto.response.AuthTokenResponse;
+import com.peatroxd.bulletinboardproject.common.exception.UnauthorizedException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -15,21 +17,17 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 @Component
+@RequiredArgsConstructor
 public class KeycloakAuthClient {
 
-    private final KeycloakEndpointFactory endpointFactory;
+    private final KeycloakAdminProperties properties;
     private final RestTemplate restTemplate;
-
-    public KeycloakAuthClient(KeycloakEndpointFactory endpointFactory, RestTemplate restTemplate) {
-        this.endpointFactory = endpointFactory;
-        this.restTemplate = restTemplate;
-    }
 
     public AuthTokenResponse login(AuthLoginRequest request) {
         MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
         form.add("grant_type", "password");
-        form.add("client_id", endpointFactory.clientId());
-        form.add("client_secret", endpointFactory.clientSecret());
+        form.add("client_id", properties.clientId());
+        form.add("client_secret", properties.clientSecret());
         form.add("username", request.username());
         form.add("password", request.password());
 
@@ -38,7 +36,7 @@ public class KeycloakAuthClient {
 
         try {
             ResponseEntity<AuthTokenResponse> response = restTemplate.exchange(
-                    endpointFactory.realmTokenUrl(),
+                    realmTokenUrl(),
                     HttpMethod.POST,
                     new HttpEntity<>(form, headers),
                     AuthTokenResponse.class
@@ -51,7 +49,14 @@ public class KeycloakAuthClient {
 
             return body;
         } catch (HttpClientErrorException.Unauthorized ex) {
-            throw new IllegalArgumentException("Invalid username or password");
+            throw new UnauthorizedException("Invalid username or password");
         }
+    }
+
+    private String realmTokenUrl() {
+        String base = properties.serverUrl().endsWith("/")
+                ? properties.serverUrl().substring(0, properties.serverUrl().length() - 1)
+                : properties.serverUrl();
+        return base + "/realms/" + properties.realm() + "/protocol/openid-connect/token";
     }
 }

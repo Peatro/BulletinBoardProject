@@ -3,3 +3,5 @@ databaseChangeLog:
       file: db/changelog/2026/03/20-01-changelog.yaml
   - include:
       file: db/changelog/2026/03/31-01-category-seed.yaml
+  - include:
+      file: db/changelog/2026/04/20-01-changelog.yaml

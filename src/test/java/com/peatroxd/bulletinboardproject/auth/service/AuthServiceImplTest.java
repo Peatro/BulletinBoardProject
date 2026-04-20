@@ -11,6 +11,7 @@ import com.peatroxd.bulletinboardproject.security.keycloak.KeycloakAdminClient;
 import com.peatroxd.bulletinboardproject.security.keycloak.KeycloakAuthClient;
 import com.peatroxd.bulletinboardproject.user.entity.User;
 import com.peatroxd.bulletinboardproject.user.facade.UserFacade;
+import com.peatroxd.bulletinboardproject.user.mapper.UserMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -41,6 +42,9 @@ class AuthServiceImplTest {
     private UserFacade userFacade;
 
     @Mock
+    private UserMapper userMapper;
+
+    @Mock
     private KeycloakAuthClient keycloakAuthClient;
 
     @Mock
@@ -54,14 +58,15 @@ class AuthServiceImplTest {
         AuthRegisterRequest request = registerRequest();
         UUID keycloakUserId = UUID.randomUUID();
         User persistedUser = user(keycloakUserId);
+        AuthRegisterResponse expected = new AuthRegisterResponse(USERNAME, EMAIL, FIRST_NAME, LAST_NAME, PHONE);
 
         mockKeycloakUserCreation(request, keycloakUserId);
         when(userFacade.createUser(any())).thenReturn(persistedUser);
+        when(userMapper.toRegisterResponse(persistedUser)).thenReturn(expected);
 
         AuthRegisterResponse response = authService.register(request);
 
-        assertThat(response).isEqualTo(AuthRegisterResponse.from(persistedUser));
-
+        assertThat(response).isEqualTo(expected);
         verifyKeycloakUserCreation(request);
         verify(userFacade).createUser(any());
         verify(keycloakAdminClient, never()).deleteUser(any());
@@ -101,25 +106,6 @@ class AuthServiceImplTest {
     }
 
     @Test
-    void registerShouldRejectBlankUsername() {
-        AuthRegisterRequest request = new AuthRegisterRequest(
-                " ",
-                EMAIL,
-                FIRST_NAME,
-                LAST_NAME,
-                PHONE,
-                PASSWORD
-        );
-
-        assertThatThrownBy(() -> authService.register(request))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Username must not be blank");
-
-        verify(keycloakAdminClient, never()).createUser(any(), any(), any(), any(), any(), any(), any());
-        verify(userFacade, never()).createUser(any());
-    }
-
-    @Test
     void loginShouldDelegateToKeycloakAuthClient() {
         AuthLoginRequest request = loginRequest();
         AuthTokenResponse tokenResponse = tokenResponse();
@@ -130,17 +116,6 @@ class AuthServiceImplTest {
 
         assertThat(response).isEqualTo(tokenResponse);
         verify(keycloakAuthClient).login(request);
-    }
-
-    @Test
-    void loginShouldRejectBlankPassword() {
-        AuthLoginRequest request = new AuthLoginRequest(USERNAME, " ");
-
-        assertThatThrownBy(() -> authService.login(request))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Password must not be blank");
-
-        verify(keycloakAuthClient, never()).login(any());
     }
 
     private AuthRegisterRequest registerRequest() {

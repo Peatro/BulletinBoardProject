@@ -1,0 +1,32 @@
+databaseChangeLog:
+  - changeSet:
+      id: 2026-04-20-1
+      author: Peatr
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - dropForeignKeyConstraint:
+            baseTableName: comments
+            constraintName: FK_COMMENTS_ON_ADVERTISEMENT
+        - dropForeignKeyConstraint:
+            baseTableName: comments
+            constraintName: FK_COMMENTS_ON_AUTHOR
+        - dropTable:
+            tableName: comments
+
+  - changeSet:
+      id: 2026-04-20-2
+      author: Peatr
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - modifyDataType:
+            tableName: advertisement
+            columnName: created_at
+            newDataType: TIMESTAMP
+        - modifyDataType:
+            tableName: advertisement
+            columnName: updated_at
+            newDataType: TIMESTAMP
+        - modifyDataType:
+            tableName: advertisement
+            columnName: published_at
+            newDataType: TIMESTAMP

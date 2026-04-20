@@ -1,38 +1,32 @@
 package com.peatroxd.bulletinboardproject.security.keycloak;
 
+import com.peatroxd.bulletinboardproject.common.exception.ConflictException;
 import com.peatroxd.bulletinboardproject.security.Role;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import com.peatroxd.bulletinboardproject.user.dto.request.AdminUserUpdateRequest;
+import com.peatroxd.bulletinboardproject.user.dto.request.UserUpdateRequest;
+import jakarta.ws.rs.core.Response;
+import lombok.RequiredArgsConstructor;
+import org.keycloak.admin.client.CreatedResponseUtil;
+import org.keycloak.admin.client.Keycloak;
+import org.keycloak.admin.client.resource.RealmResource;
+import org.keycloak.admin.client.resource.UserResource;
+import org.keycloak.representations.idm.CredentialRepresentation;
+import org.keycloak.representations.idm.RoleRepresentation;
+import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import org.springframework.web.client.RestTemplate;
 
-import java.net.URI;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class KeycloakAdminClient {
 
-    private final KeycloakEndpointFactory endpointFactory;
-    private final KeycloakAdminTokenProvider adminTokenProvider;
-    private final RestTemplate restTemplate;
-
-    public KeycloakAdminClient(
-            KeycloakEndpointFactory endpointFactory,
-            KeycloakAdminTokenProvider adminTokenProvider,
-            RestTemplate restTemplate
-    ) {
-        this.endpointFactory = endpointFactory;
-        this.adminTokenProvider = adminTokenProvider;
-        this.restTemplate = restTemplate;
-    }
+    private final Keycloak keycloak;
+    private final KeycloakAdminProperties properties;
 
     public UUID createUser(
             String username,
@@ -43,126 +37,101 @@ public class KeycloakAdminClient {
             String password,
             Role role
     ) {
-        String token = adminTokenProvider.getAccessToken();
-        UUID userId = createKeycloakUser(username, email, firstName, lastName, phone, password, token);
-        assignRealmRole(userId, role.name(), token);
-        return userId;
+        UserRepresentation user = buildUserRepresentation(username, email, firstName, lastName, phone, password);
+
+        RealmResource realm = keycloak.realm(properties.realm());
+        try (Response response = realm.users().create(user)) {
+            if (response.getStatus() == Response.Status.CONFLICT.getStatusCode()) {
+                throw new ConflictException("User already exists with the same username or email");
+            }
+            UUID userId = UUID.fromString(CreatedResponseUtil.getCreatedId(response));
+            assignRealmRole(realm, userId, role.name());
+            return userId;
+        }
     }
 
     public void deleteUser(UUID userId) {
-        HttpHeaders headers = bearerHeaders(adminTokenProvider.getAccessToken());
-        restTemplate.exchange(
-                endpointFactory.userUrl(userId),
-                HttpMethod.DELETE,
-                new HttpEntity<>(headers),
-                Void.class
-        );
+        keycloak.realm(properties.realm()).users().delete(userId.toString());
     }
 
-    private UUID createKeycloakUser(
-            String username,
-            String email,
-            String firstName,
-            String lastName,
-            String phone,
-            String password,
-            String token
+    public void updateCurrentUser(UUID keycloakUserId, UserUpdateRequest request) {
+        RealmResource realm = keycloak.realm(properties.realm());
+        UserResource userResource = realm.users().get(keycloakUserId.toString());
+        UserRepresentation user = userResource.toRepresentation();
+
+        user.setEmail(request.email());
+        user.setFirstName(request.firstName());
+        if (StringUtils.hasText(request.lastName())) {
+            user.setLastName(request.lastName());
+        }
+        if (StringUtils.hasText(request.phone())) {
+            user.setAttributes(Map.of("phone", List.of(request.phone())));
+        }
+        userResource.update(user);
+    }
+
+    public void updateUser(UUID keycloakUserId, AdminUserUpdateRequest request) {
+        RealmResource realm = keycloak.realm(properties.realm());
+        UserResource userResource = realm.users().get(keycloakUserId.toString());
+        UserRepresentation user = userResource.toRepresentation();
+
+        user.setUsername(request.username());
+        user.setEmail(request.email());
+        user.setFirstName(request.firstName());
+        user.setEnabled(request.enabled());
+        if (StringUtils.hasText(request.lastName())) {
+            user.setLastName(request.lastName());
+        }
+        if (StringUtils.hasText(request.phone())) {
+            user.setAttributes(Map.of("phone", List.of(request.phone())));
+        }
+        userResource.update(user);
+
+        updateUserRole(realm, keycloakUserId, request.role());
+    }
+
+    private void updateUserRole(RealmResource realm, UUID userId, Role newRole) {
+        var rolesResource = realm.users().get(userId.toString()).roles().realmLevel();
+
+        List<RoleRepresentation> currentAppRoles = rolesResource.listEffective().stream()
+                .filter(r -> Arrays.stream(Role.values()).anyMatch(appRole -> appRole.name().equals(r.getName())))
+                .toList();
+        if (!currentAppRoles.isEmpty()) {
+            rolesResource.remove(currentAppRoles);
+        }
+
+        RoleRepresentation role = realm.roles().get(newRole.name()).toRepresentation();
+        rolesResource.add(List.of(role));
+    }
+
+    private UserRepresentation buildUserRepresentation(
+            String username, String email, String firstName,
+            String lastName, String phone, String password
     ) {
-        Map<String, Object> payload = new LinkedHashMap<>();
-        payload.put("username", username);
-        payload.put("firstName", firstName);
-        payload.put("email", email);
-        payload.put("enabled", true);
+        UserRepresentation user = new UserRepresentation();
+        user.setUsername(username);
+        user.setEmail(email);
+        user.setFirstName(firstName);
+        user.setEnabled(true);
 
         if (StringUtils.hasText(lastName)) {
-            payload.put("lastName", lastName);
+            user.setLastName(lastName);
         }
-
-        Map<String, List<String>> attributes = new HashMap<>();
         if (StringUtils.hasText(phone)) {
-            attributes.put("phone", List.of(phone));
-        }
-        if (!attributes.isEmpty()) {
-            payload.put("attributes", attributes);
+            user.setAttributes(Map.of("phone", List.of(phone)));
         }
 
-        Map<String, Object> credential = new LinkedHashMap<>();
-        credential.put("type", "password");
-        credential.put("value", password);
-        credential.put("temporary", false);
-        payload.put("credentials", List.of(credential));
+        CredentialRepresentation credential = new CredentialRepresentation();
+        credential.setType(CredentialRepresentation.PASSWORD);
+        credential.setValue(password);
+        credential.setTemporary(false);
+        user.setCredentials(List.of(credential));
 
-        HttpHeaders headers = bearerHeaders(token);
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        ResponseEntity<Void> response = restTemplate.exchange(
-                endpointFactory.usersUrl(),
-                HttpMethod.POST,
-                new HttpEntity<>(payload, headers),
-                Void.class
-        );
-
-        URI location = response.getHeaders().getLocation();
-        if (location == null) {
-            throw new IllegalStateException("Keycloak did not return Location header for new user");
-        }
-
-        return UUID.fromString(extractIdFromLocation(location));
+        return user;
     }
 
-    private void assignRealmRole(UUID userId, String roleName, String token) {
-        Map<String, Object> roleRepresentation = getRealmRole(roleName, token);
-        Object roleId = roleRepresentation.get("id");
-        Object roleNameValue = roleRepresentation.get("name");
-
-        if (roleId == null || roleNameValue == null) {
-            throw new IllegalStateException("Keycloak role not found: " + roleName);
-        }
-
-        List<Map<String, Object>> roles = List.of(
-                Map.of(
-                        "id", roleId,
-                        "name", roleNameValue
-                )
-        );
-
-        HttpHeaders headers = bearerHeaders(token);
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        restTemplate.exchange(
-                endpointFactory.userRealmRoleMappingsUrl(userId),
-                HttpMethod.POST,
-                new HttpEntity<>(roles, headers),
-                Void.class
-        );
-    }
-
-    private Map<String, Object> getRealmRole(String roleName, String token) {
-        ResponseEntity<Map> response = restTemplate.exchange(
-                endpointFactory.realmRoleUrl(roleName),
-                HttpMethod.GET,
-                new HttpEntity<>(bearerHeaders(token)),
-                Map.class
-        );
-        Map<String, Object> body = response.getBody();
-        if (body == null) {
-            throw new IllegalStateException("Keycloak role response is empty for role: " + roleName);
-        }
-        return body;
-    }
-
-    private HttpHeaders bearerHeaders(String token) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(token);
-        return headers;
-    }
-
-    private static String extractIdFromLocation(URI location) {
-        String value = location.toString();
-        int lastSlash = value.lastIndexOf('/');
-        if (lastSlash < 0 || lastSlash == value.length() - 1) {
-            throw new IllegalStateException("Unexpected Keycloak Location header: " + value);
-        }
-        return value.substring(lastSlash + 1);
+    private void assignRealmRole(RealmResource realm, UUID userId, String roleName) {
+        RoleRepresentation role = realm.roles().get(roleName).toRepresentation();
+        realm.users().get(userId.toString()).roles().realmLevel().add(List.of(role));
     }
 }
