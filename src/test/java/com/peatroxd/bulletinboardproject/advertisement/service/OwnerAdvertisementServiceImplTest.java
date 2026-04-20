@@ -102,8 +102,6 @@ class OwnerAdvertisementServiceImplTest {
         assertThat(persisted.getAuthor()).isEqualTo(author);
         assertThat(persisted.getCategory()).isEqualTo(category);
         assertThat(persisted.getStatus()).isEqualTo(AdvertisementStatus.DRAFT);
-        assertThat(persisted.getCreatedAt()).isNotNull();
-        assertThat(persisted.getUpdatedAt()).isNotNull();
     }
 
     @Test
@@ -185,7 +183,6 @@ class OwnerAdvertisementServiceImplTest {
         assertThat(advertisement.getPrice()).isEqualByComparingTo("2000");
         assertThat(advertisement.getType()).isEqualTo(AdvertisementType.BUY);
         assertThat(advertisement.getCategory()).isEqualTo(category);
-        assertThat(advertisement.getUpdatedAt()).isNotNull();
     }
 
     @Test
@@ -227,7 +224,6 @@ class OwnerAdvertisementServiceImplTest {
         assertThat(actual.status()).isEqualTo(AdvertisementStatus.PUBLISHED);
         assertThat(advertisement.getStatus()).isEqualTo(AdvertisementStatus.PUBLISHED);
         assertThat(advertisement.getPublishedAt()).isNotNull();
-        assertThat(advertisement.getUpdatedAt()).isNotNull();
     }
 
     @Test

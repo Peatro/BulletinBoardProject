@@ -39,10 +39,11 @@ public class OwnerAdvertisementServiceImpl implements OwnerAdvertisementService 
         Category category = categoryFacade.getById(request.categoryId());
 
         Advertisement advertisement = advertisementMapper.toEntity(request);
-        setAdvertisementDefaults(advertisement, author, category);
+        advertisement.setAuthor(author);
+        advertisement.setCategory(category);
+        advertisement.setStatus(AdvertisementStatus.DRAFT);
 
-        Advertisement savedAdvertisement = advertisementRepository.save(advertisement);
-        return advertisementMapper.toResponse(savedAdvertisement);
+        return advertisementMapper.toResponse(advertisementRepository.save(advertisement));
     }
 
     @Override
@@ -57,16 +58,12 @@ public class OwnerAdvertisementServiceImpl implements OwnerAdvertisementService 
     @Transactional
     public AdvertisementResponse updateAdvertisement(Long id, AdvertisementCreateRequest request, UUID userId) {
         Advertisement advertisement = findByIdOrThrow(id);
-        Category category = categoryFacade.getById(request.categoryId());
-
         validateOwnership(advertisement, userId);
 
         advertisementMapper.updateEntity(request, advertisement);
-        advertisement.setCategory(category);
-        advertisement.setUpdatedAt(LocalDateTime.now());
+        advertisement.setCategory(categoryFacade.getById(request.categoryId()));
 
-        Advertisement savedAdvertisement = advertisementRepository.save(advertisement);
-        return advertisementMapper.toResponse(savedAdvertisement);
+        return advertisementMapper.toResponse(advertisementRepository.save(advertisement));
     }
 
     @Override
@@ -81,16 +78,13 @@ public class OwnerAdvertisementServiceImpl implements OwnerAdvertisementService 
     @Transactional
     public AdvertisementResponse publishAdvertisement(Long id, UUID userId) {
         Advertisement advertisement = findByIdOrThrow(id);
-
         validateOwnership(advertisement, userId);
         validatePublishAllowed(advertisement);
 
         advertisement.setStatus(AdvertisementStatus.PUBLISHED);
         advertisement.setPublishedAt(LocalDateTime.now());
-        advertisement.setUpdatedAt(LocalDateTime.now());
 
-        Advertisement savedAdvertisement = advertisementRepository.save(advertisement);
-        return advertisementMapper.toResponse(savedAdvertisement);
+        return advertisementMapper.toResponse(advertisementRepository.save(advertisement));
     }
 
     private Advertisement findByIdOrThrow(Long id) {
@@ -98,16 +92,6 @@ public class OwnerAdvertisementServiceImpl implements OwnerAdvertisementService 
                 .orElseThrow(() -> new ResourceNotFoundException(
                         NotFoundExceptionMessage.ADVERTISEMENT_NOT_FOUND.getMessage()
                 ));
-    }
-
-    private void setAdvertisementDefaults(Advertisement advertisement, User author, Category category) {
-        LocalDateTime now = LocalDateTime.now();
-
-        advertisement.setAuthor(author);
-        advertisement.setCategory(category);
-        advertisement.setStatus(AdvertisementStatus.DRAFT);
-        advertisement.setCreatedAt(now);
-        advertisement.setUpdatedAt(now);
     }
 
     private void validateOwnership(Advertisement advertisement, UUID userId) {

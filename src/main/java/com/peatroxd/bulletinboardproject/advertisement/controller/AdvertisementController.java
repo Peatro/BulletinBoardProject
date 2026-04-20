@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,7 +39,7 @@ public interface AdvertisementController {
             @ApiResponse(responseCode = "401", description = "Пользователь не аутентифицирован", content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     })
     ResponseEntity<AdvertisementResponse> createAdvertisement(
-            @RequestBody AdvertisementCreateRequest request,
+            @Valid @RequestBody AdvertisementCreateRequest request,
             @Parameter(hidden = true)
             @CurrentUser UUID userId
     );
@@ -92,7 +93,7 @@ public interface AdvertisementController {
     })
     ResponseEntity<AdvertisementResponse> updateAdvertisement(
             @PathVariable Long id,
-            @RequestBody AdvertisementCreateRequest request,
+            @Valid @RequestBody AdvertisementCreateRequest request,
             @Parameter(hidden = true)
             @CurrentUser UUID userId
     );

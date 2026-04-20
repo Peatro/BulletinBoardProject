@@ -26,6 +26,7 @@ import java.util.UUID;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -115,6 +116,17 @@ class UserControllerWebMvcTest {
     }
 
     @Test
+    void deleteCurrentUserShouldDelegateToUserService() throws Exception {
+        UUID keycloakUserId = UUID.randomUUID();
+        setCurrentJwtUser(keycloakUserId);
+
+        mockMvc.perform(delete("/api/users/me"))
+                .andExpect(status().isOk());
+
+        verify(userService).deleteCurrentUser(keycloakUserId);
+    }
+
+    @Test
     void getUserByIdShouldReturnDtoForAdminEndpoint() throws Exception {
         UUID userId = UUID.randomUUID();
         UserResponse response = userResponse(UUID.randomUUID());
@@ -174,6 +186,16 @@ class UserControllerWebMvcTest {
                 .andExpect(jsonPath("$.enabled").value(false));
 
         verify(userService).updateUser(userId, request);
+    }
+
+    @Test
+    void deleteUserShouldDelegateToUserService() throws Exception {
+        UUID userId = UUID.randomUUID();
+
+        mockMvc.perform(delete("/api/users/{id}", userId))
+                .andExpect(status().isOk());
+
+        verify(userService).deleteUser(userId);
     }
 
     private void setCurrentJwtUser(UUID userId) {
