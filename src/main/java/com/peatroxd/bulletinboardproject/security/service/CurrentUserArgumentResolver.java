@@ -1,6 +1,7 @@
 package com.peatroxd.bulletinboardproject.security.service;
 
 import com.peatroxd.bulletinboardproject.security.annotation.CurrentUser;
+import lombok.RequiredArgsConstructor;
 import org.springframework.core.MethodParameter;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.support.WebDataBinderFactory;
@@ -9,13 +10,10 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
 @Component
+@RequiredArgsConstructor
 public class CurrentUserArgumentResolver implements HandlerMethodArgumentResolver {
 
     private final CurrentUserService currentUserService;
-
-    public CurrentUserArgumentResolver(CurrentUserService currentUserService) {
-        this.currentUserService = currentUserService;
-    }
 
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
